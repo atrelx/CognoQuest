@@ -1,0 +1,32 @@
+package org.example.cognoquest.answer.mapper;
+
+import org.example.cognoquest.answer.*;
+import org.example.cognoquest.answer.dto.*;
+import org.example.cognoquest.question.Question;
+import org.example.cognoquest.survey.SurveyAttempt;
+import org.example.cognoquest.survey.dto.SurveyAttemptResultDto;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.util.List;
+import java.util.UUID;
+
+@Mapper(componentModel = "spring")
+public interface AnswerMapper {
+    @Mapping(target = "attempt", source = "attempt")
+    @Mapping(target = "question", source = "question")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isCorrect", ignore = true) // Being set in the service
+    Answer toEntity(AnswerCreateDto dto, SurveyAttempt attempt, Question question);
+    AnswerOption toOptionEntity(UUID optionId, Answer answer);
+    AnswerMatching toMatchingEntity(MatchingAnswerDto dto, Answer answer);
+    AnswerText toTextEntity(AnswerCreateDto dto, Answer answer);
+
+    @Mapping(target = "questionId", source = "answer.question.id")
+    @Mapping(target = "questionText", source = "answer.question.questionText")
+    @Mapping(target = "userAnswers", source = "userAnswers")
+    @Mapping(target = "correctAnswers", source = "correctAnswers")
+    AnswerResultDto toResultDto(Answer answer, List<String> userAnswers, List<String> correctAnswers);
+
+    SurveyAttemptResultDto toAttemptResultDto(SurveyAttempt attempt, List<AnswerResultDto> answers);
+}
