@@ -4,15 +4,16 @@ import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.answer.*;
 import org.example.cognoquest.answer.dto.AnswerCreateDto;
 import org.example.cognoquest.answer.dto.AnswerResultDto;
+import org.example.cognoquest.option.mapper.OptionMapper;
+import org.example.cognoquest.question.dto.QuestionClientResponseDto;
+import org.example.cognoquest.question.mapper.MatchingPairMapper;
 import org.example.cognoquest.survey.dto.*;
 import org.example.cognoquest.answer.mapper.AnswerMapper;
 import org.example.cognoquest.exception.ForbiddenException;
 import org.example.cognoquest.exception.NotFoundException;
 import org.example.cognoquest.option.Option;
 import org.example.cognoquest.option.OptionRepository;
-import org.example.cognoquest.option.dto.OptionCreateDto;
 import org.example.cognoquest.question.*;
-import org.example.cognoquest.question.dto.MatchingPairCreateDto;
 import org.example.cognoquest.question.dto.QuestionResponseDto;
 import org.example.cognoquest.question.mapper.QuestionMapper;
 import org.example.cognoquest.survey.mapper.SurveyMapper;
@@ -44,6 +45,8 @@ public class SurveyService {
     private final SurveyMapper surveyMapper;
     private final AnswerMapper answerMapper;
     private final QuestionMapper questionMapper;
+    private final OptionMapper optionMapper;
+    private final MatchingPairMapper matchingPairMapper;
 
     @Transactional
     public UUID createSurvey(SurveyCreateDto dto, String userId) {
@@ -101,22 +104,6 @@ public class SurveyService {
             throw new ForbiddenException("Only the creator can delete the survey");
         }
         surveyRepository.delete(survey);
-    }
-
-    public List<QuestionResponseDto> getSurveyQuestions(UUID surveyId) {
-        Survey survey = surveyRepository.findById(surveyId)
-                .orElseThrow(() -> new NotFoundException("Survey not found"));
-
-        List<Question> questions = questionRepository.findBySurveyId(surveyId);
-        return questions.stream()
-                .map(q -> {
-                    QuestionResponseDto dto = questionMapper.toResponseDto(q);
-                    dto.setOptions(optionRepository.findByQuestionId(q.getId())
-                            .stream().map(o -> new OptionCreateDto(o.getOptionText(), o.isCorrect())).toList());
-                    dto.setMatchingPairs(matchingPairRepository.findByQuestionId(q.getId())
-                            .stream().map(mp -> new MatchingPairCreateDto(mp.getLeftSide(), mp.getRightSide())).toList());
-                    return dto;
-                }).toList();
     }
 
     @Transactional
@@ -215,33 +202,67 @@ public class SurveyService {
         return surveyMapper.toResultDto(survey, avgScore, completionCount, attemptResult);
     }
 
-    public List<SurveyResponseDto> getAllSurveys() {
+    public List<SurveyClientResponseDto> getAllSurveys() {
         List<Survey> surveys = surveyRepository.findAll();
-        return getSurveyResponseDtos(surveys);
+        return surveys.stream()
+                .map(survey -> {
+                    SurveyClientResponseDto dto = surveyMapper.toClientResponseDto(survey);
+                    dto.getQuestions().forEach(q -> {
+                        q.setOptions(optionMapper.toClientResponseDto(
+                                optionRepository.findByQuestionId(q.getId())));
+                        q.setMatchingPairs(matchingPairMapper.toClientResponseDto(
+                                matchingPairRepository.findByQuestionId(q.getId())));
+                    });
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
-    public List<SurveyResponseDto> getUserSurveys(String userId) {
+    public List<SurveyClientResponseDto> getUserSurveys(String userId) {
         List<Survey> surveys = surveyRepository.findByCreatedById(UUID.fromString(userId));
-        return getSurveyResponseDtos(surveys);
+        return surveys.stream()
+                .map(survey -> {
+                    SurveyClientResponseDto dto = surveyMapper.toClientResponseDto(survey);
+                    dto.getQuestions().forEach(q -> {
+                        q.setOptions(optionMapper.toClientResponseDto(
+                                optionRepository.findByQuestionId(q.getId())));
+                        q.setMatchingPairs(matchingPairMapper.toClientResponseDto(
+                                matchingPairRepository.findByQuestionId(q.getId())));
+                    });
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
-    private List<SurveyResponseDto> getSurveyResponseDtos(List<Survey> surveys) {
-        return surveys.stream().map(survey -> {
-            SurveyResponseDto dto = surveyMapper.toResponseDto(survey);
-            dto.getQuestions().forEach(q -> {
-                q.setOptions(optionRepository.findByQuestionId(
-                                survey.getQuestions().stream()
-                                        .filter(qq -> qq.getQuestionText().equals(q.getQuestionText()))
-                                        .findFirst().get().getId())
-                        .stream().map(o -> new OptionCreateDto(o.getOptionText(), o.isCorrect())).toList());
-                q.setMatchingPairs(matchingPairRepository.findByQuestionId(
-                                survey.getQuestions().stream()
-                                        .filter(qq -> qq.getQuestionText().equals(q.getQuestionText()))
-                                        .findFirst().get().getId())
-                        .stream().map(mp -> new MatchingPairCreateDto(mp.getLeftSide(), mp.getRightSide())).toList());
-            });
-            return dto;
-        }).toList();
+    public SurveyClientResponseDto getSurvey(UUID surveyId) {
+        Survey survey = surveyRepository.findById(surveyId)
+                .orElseThrow(() -> new NotFoundException("Survey not found"));
+
+        SurveyClientResponseDto dto = surveyMapper.toClientResponseDto(survey);
+        dto.getQuestions().forEach(q -> {
+            q.setOptions(optionMapper.toClientResponseDto(
+                    optionRepository.findByQuestionId(q.getId())));
+            q.setMatchingPairs(matchingPairMapper.toClientResponseDto(
+                    matchingPairRepository.findByQuestionId(q.getId())));
+        });
+        return dto;
+    }
+
+    public List<QuestionClientResponseDto> getSurveyQuestions(UUID surveyId) {
+        Survey survey = surveyRepository.findById(surveyId)
+                .orElseThrow(() -> new NotFoundException("Survey not found"));
+
+        List<Question> questions = questionRepository.findBySurveyId(surveyId);
+        return questions.stream()
+                .map(q -> {
+                    QuestionClientResponseDto dto = questionMapper.toClientResponseDto(q);
+                    dto.setOptions(optionMapper.toClientResponseDto(
+                            optionRepository.findByQuestionId(q.getId())));
+                    dto.setMatchingPairs(matchingPairMapper.toClientResponseDto(
+                            matchingPairRepository.findByQuestionId(q.getId())));
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     private boolean checkAnswerCorrectness(AnswerCreateDto dto, Question question) {

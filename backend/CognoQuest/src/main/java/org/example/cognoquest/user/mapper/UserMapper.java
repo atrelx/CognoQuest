@@ -1,5 +1,6 @@
-package org.example.cognoquest.user;
+package org.example.cognoquest.user.mapper;
 
+import org.example.cognoquest.user.User;
 import org.example.cognoquest.user.dto.AuthResponseDto;
 import org.example.cognoquest.user.dto.UserDto;
 import org.example.cognoquest.user.dto.UserRegistrationDto;

@@ -2,6 +2,7 @@ package org.example.cognoquest.question.mapper;
 
 import org.example.cognoquest.option.mapper.OptionMapper;
 import org.example.cognoquest.question.Question;
+import org.example.cognoquest.question.dto.QuestionClientResponseDto;
 import org.example.cognoquest.question.dto.QuestionCreateDto;
 import org.example.cognoquest.question.dto.QuestionResponseDto;
 import org.example.cognoquest.survey.Survey;
@@ -29,4 +30,11 @@ public interface QuestionMapper {
     @Mapping(target = "options", ignore = true) // Is being set in the service
     @Mapping(target = "matchingPairs", ignore = true) // Is being set in the service
     QuestionCreateDto toCreateDto(Question question);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "questionText", source = "questionText")
+    @Mapping(target = "type", source = "type")
+    @Mapping(target = "options", ignore = true) // Устанавливается в сервисе
+    @Mapping(target = "matchingPairs", ignore = true) // Устанавливается в сервисе
+    QuestionClientResponseDto toClientResponseDto(Question question);
 }

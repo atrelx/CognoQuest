@@ -2,6 +2,7 @@ package org.example.cognoquest.survey;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.cognoquest.question.dto.QuestionClientResponseDto;
 import org.example.cognoquest.question.dto.QuestionResponseDto;
 import org.example.cognoquest.survey.dto.*;
 import org.springframework.http.ResponseEntity;
@@ -25,16 +26,28 @@ public class SurveyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SurveyResponseDto>> getSurveys() {
-        List<SurveyResponseDto> surveys = surveyService.getAllSurveys();
+    public ResponseEntity<List<SurveyClientResponseDto>> getSurveys() {
+        List<SurveyClientResponseDto> surveys = surveyService.getAllSurveys();
         return ResponseEntity.ok(surveys);
     }
 
     @GetMapping("/user/surveys")
-    public ResponseEntity<List<SurveyResponseDto>> getUserSurveys() {
+    public ResponseEntity<List<SurveyClientResponseDto>> getUserSurveys() {
         String userId = getCurrentUserId();
-        List<SurveyResponseDto> surveys = surveyService.getUserSurveys(userId);
+        List<SurveyClientResponseDto> surveys = surveyService.getUserSurveys(userId);
         return ResponseEntity.ok(surveys);
+    }
+
+    @GetMapping("/{surveyId}")
+    public ResponseEntity<SurveyClientResponseDto> getSurvey(@PathVariable UUID surveyId) {
+        SurveyClientResponseDto survey = surveyService.getSurvey(surveyId);
+        return ResponseEntity.ok(survey);
+    }
+
+    @GetMapping("/{surveyId}/questions")
+    public ResponseEntity<List<QuestionClientResponseDto>> getSurveyQuestions(@PathVariable UUID surveyId) {
+        List<QuestionClientResponseDto> questions = surveyService.getSurveyQuestions(surveyId);
+        return ResponseEntity.ok(questions);
     }
 
     @PutMapping("/{surveyId}")
@@ -49,12 +62,6 @@ public class SurveyController {
         String userId = getCurrentUserId();
         surveyService.deleteSurvey(surveyId, userId);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/{surveyId}/questions")
-    public ResponseEntity<List<QuestionResponseDto>> getSurveyQuestions(@PathVariable UUID surveyId) {
-        List<QuestionResponseDto> questions = surveyService.getSurveyQuestions(surveyId);
-        return ResponseEntity.ok(questions);
     }
 
     @PostMapping("/attempt")

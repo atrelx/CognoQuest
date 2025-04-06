@@ -9,7 +9,7 @@ import org.example.cognoquest.oauth2.OAuth2ProviderFactory;
 import org.example.cognoquest.security.JwtUtil;
 import org.example.cognoquest.security.refreshToken.RefreshTokenRepository;
 import org.example.cognoquest.user.User;
-import org.example.cognoquest.user.UserMapper;
+import org.example.cognoquest.user.mapper.UserMapper;
 import org.example.cognoquest.user.UserRepository;
 import org.example.cognoquest.user.dto.OAuthLoginRequestDto;
 import org.example.cognoquest.user.dto.UserLoginDto;
