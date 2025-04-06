@@ -3,7 +3,6 @@ package org.example.cognoquest.survey;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.question.dto.QuestionClientResponseDto;
-import org.example.cognoquest.question.dto.QuestionResponseDto;
 import org.example.cognoquest.survey.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;

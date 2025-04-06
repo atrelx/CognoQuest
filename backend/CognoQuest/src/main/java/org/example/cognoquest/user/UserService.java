@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
 
 
     /**

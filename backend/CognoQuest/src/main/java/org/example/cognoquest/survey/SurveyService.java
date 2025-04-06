@@ -14,7 +14,6 @@ import org.example.cognoquest.exception.NotFoundException;
 import org.example.cognoquest.option.Option;
 import org.example.cognoquest.option.OptionRepository;
 import org.example.cognoquest.question.*;
-import org.example.cognoquest.question.dto.QuestionResponseDto;
 import org.example.cognoquest.question.mapper.QuestionMapper;
 import org.example.cognoquest.survey.mapper.SurveyMapper;
 import org.example.cognoquest.user.User;
