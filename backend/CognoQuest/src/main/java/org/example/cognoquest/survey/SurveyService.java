@@ -112,6 +112,8 @@ public class SurveyService {
         Survey survey = surveyRepository.findById(dto.getSurveyId())
                 .orElseThrow(() -> new NotFoundException("Survey not found"));
 
+        System.out.println("User taking the survey: " + user);
+
         int totalSurveyQuestions = survey.getQuestions().size();
         if (dto.getAnswers().size() != totalSurveyQuestions) {
             throw new IllegalArgumentException(
@@ -185,6 +187,7 @@ public class SurveyService {
         attempt.setCompletedAt(OffsetDateTime.now());
         attemptRepository.save(attempt);
 
+        System.out.println("Survey attempt saved: " + attempt);
         return attempt.getId();
     }
 
