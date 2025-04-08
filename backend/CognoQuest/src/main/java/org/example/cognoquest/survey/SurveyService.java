@@ -159,10 +159,11 @@ public class SurveyService {
                         for (UUID optionId : answerDto.getSelectedOptionIds()) {
                             Option option = optionRepository.findById(optionId)
                                     .orElseThrow(() -> new NotFoundException("Option " + optionId + " not found"));
+
                             if (!option.getQuestion().getId().equals(question.getId())) {
                                 throw new IllegalArgumentException("Option " + optionId + " does not belong to question " + question.getId());
                             }
-                            AnswerOption answerOption = answerMapper.toOptionEntity(optionId, answer);
+                            AnswerOption answerOption = answerMapper.toOptionEntity(option, answer);
                             answerOptionRepository.save(answerOption);
                         }
                     }

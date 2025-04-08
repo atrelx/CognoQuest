@@ -2,6 +2,7 @@ package org.example.cognoquest.answer.mapper;
 
 import org.example.cognoquest.answer.*;
 import org.example.cognoquest.answer.dto.*;
+import org.example.cognoquest.option.Option;
 import org.example.cognoquest.question.Question;
 import org.example.cognoquest.survey.SurveyAttempt;
 import org.example.cognoquest.survey.dto.SurveyAttemptResultDto;
@@ -18,7 +19,11 @@ public interface AnswerMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "isCorrect", ignore = true) // Being set in the service
     Answer toEntity(AnswerCreateDto dto, SurveyAttempt attempt, Question question);
-    AnswerOption toOptionEntity(UUID optionId, Answer answer);
+
+    @Mapping(target = "option", source = "option")
+    @Mapping(target = "answer", source = "answer")
+    @Mapping(target = "id", ignore = true)
+    AnswerOption toOptionEntity(Option option, Answer answer);
     AnswerMatching toMatchingEntity(MatchingAnswerDto dto, Answer answer);
     AnswerText toTextEntity(AnswerCreateDto dto, Answer answer);
 
