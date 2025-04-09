@@ -3,8 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import api from "../services/ApiService.js";
 
 function SurveyResult() {
-    const { id } = useParams(); // ID опроса
-    const [result, setResult] = useState(null); // Данные DTO SurveyResultDto
+    const { id } = useParams();
+    const [result, setResult] = useState(null); // SurveyResultDto
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 

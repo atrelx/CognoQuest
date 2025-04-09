@@ -142,13 +142,16 @@ public class SurveyService {
         int totalQuestions = dto.getAnswers().size();
 
         for (AnswerCreateDto answerDto : dto.getAnswers()) {
+            System.out.println("Processing answer for question ID: " + answerDto.getQuestionId());
             Question question = questionRepository.findById(answerDto.getQuestionId())
                     .orElseThrow(() -> new NotFoundException("Question not found"));
 
             Answer answer = answerMapper.toEntity(answerDto, attempt, question);
             boolean isCorrect = checkAnswerCorrectness(answerDto, question);
             answer.setIsCorrect(isCorrect);
+            System.out.println("Saving Answer entity...");
             answer = answerRepository.save(answer);
+            System.out.println("Saved Answer entity with ID: " + answer.getId());
 
             if (isCorrect) correctAnswers++;
 
@@ -177,8 +180,25 @@ public class SurveyService {
                     }
                     break;
                 case TextInput:
-                    AnswerText answerText = answerMapper.toTextEntity(answerDto, answer);
-                    answerTextRepository.save(answerText);
+                    System.out.println("Handling TextInput for Answer ID: " + answer.getId());
+
+                    //TODO: currently creating answerText entity here, but it should be created in the mapper - bug
+                    AnswerText answerText = new AnswerText();
+                    answerText.setAnswer(answer);
+                    answerText.setTextValue(answerDto.getTextAnswer());
+
+                    //AnswerText answerText = answerMapper.toTextEntity(answerDto, answer);
+                    System.out.println("Manually Creating AnswerText: [Value: '" + answerText.getTextValue() + "', Answer ID: " + (answerText.getAnswer() != null ? answerText.getAnswer().getId() : "null") + "]");
+                    //answerTextRepository.save(answerText);
+                    try {
+                        System.out.println("Attempting to save AnswerText...");
+                        answerTextRepository.save(answerText);
+                        System.out.println("Successfully saved AnswerText with ID: " + answerText.getId() + " for Answer ID: " + answer.getId());
+                    } catch (Exception e) {
+                        System.err.println("!!! ERROR saving AnswerText for Answer ID: " + answer.getId() + " !!!");
+                        e.printStackTrace();
+                        throw e;
+                    }
                     break;
             }
         }
@@ -196,7 +216,8 @@ public class SurveyService {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new NotFoundException("Survey not found"));
 
-        Double avgScore = attemptRepository.findAverageScoreBySurveyId(surveyId);
+        Double avgScore = attemptRepository.findAverageScoreBySurveyId(surveyId)
+                .orElse(null);
         Long completionCount = attemptRepository.countBySurveyIdAndCompletedAtNotNull(surveyId);
         SurveyAttempt attempt = userId != null ? attemptRepository.findBySurveyIdAndUserId(surveyId, UUID.fromString(userId))
                 .orElse(null) : null;
