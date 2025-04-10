@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.exception.NotFoundException;
 import org.example.cognoquest.user.dto.*;
 import org.example.cognoquest.user.mapper.UserMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,31 +19,24 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
 
-    /**
-     * Get user by ID
-     */
     public UserDto getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         return userMapper.toDto(user);
     }
 
-    /**
-     * Get all users
-     */
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Update user details
-     */
-    public UserDto updateUser(UUID id, UserUpdateDto updateDto) {
-        User user = userRepository.findById(id)
+    public UserDto updateUser(UserUpdateDto updateDto) {
+        UUID userId = getCurrentUserId();
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         userMapper.updateUserFromDto(updateDto, user);
@@ -51,14 +45,24 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
-    /**
-     * Delete user by ID
-     */
-    public void deleteUser(UUID id) {
-        if (!userRepository.existsById(id)) {
-            throw new NotFoundException("User not found");
+    public void changePassword(PasswordChangeDto dto) {
+        UUID currentUserId = getCurrentUserId();
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Old password is incorrect");
         }
-        userRepository.deleteById(id);
+
+        user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
     }
 
+    private UUID getCurrentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return UUID.fromString(authentication.getName());
+    }
 }

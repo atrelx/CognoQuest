@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.user.dto.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,14 +30,15 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody UserUpdateDto updateDto) {
-        return ResponseEntity.ok(userService.updateUser(id, updateDto));
+
+    @PutMapping("/me/update")
+    public ResponseEntity<UserDto> updateUser(@RequestBody @Valid UserUpdateDto userUpdateDto) {
+        return ResponseEntity.ok(userService.updateUser(userUpdateDto));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        userService.deleteUser(id);
+    @PutMapping("/me/update/change-password")
+    public ResponseEntity<Void> changePassword(@RequestBody @Valid PasswordChangeDto passwordChangeDto) {
+        userService.changePassword(passwordChangeDto);
         return ResponseEntity.noContent().build();
     }
 }
