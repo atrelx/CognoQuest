@@ -8,13 +8,20 @@ function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
-    const { login, isAuthenticated } = useAuthStore();
+    const { login: loginUserInStore } = useAuthStore();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const { data } = await api.post("/auth/login", { email, password });
-            login(data.user);
+            const response = await api.post('/auth/login', { email, password });
+
+            if (response.data) {
+                loginUserInStore(response.data); // UserDto
+                console.log("User data set in store after login:", response.data);
+            } else {
+                console.warn("Login API did not return user data.");
+            }
+
             navigate("/");
         } catch (err) {
             console.error("Login error:", err.response?.data || err.message);

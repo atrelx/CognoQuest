@@ -46,16 +46,14 @@ public class UserService {
     }
 
     public void changePassword(PasswordChangeDto dto) {
-        UUID currentUserId = getCurrentUserId();
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User currentUser = getCurrentUser();
 
-        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(dto.getOldPassword(), currentUser.getPasswordHash())) {
             throw new IllegalArgumentException("Old password is incorrect");
         }
 
-        user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
-        userRepository.save(user);
+        currentUser.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(currentUser);
     }
 
     private UUID getCurrentUserId() {
@@ -64,5 +62,18 @@ public class UserService {
             throw new RuntimeException("User not authenticated");
         }
         return UUID.fromString(authentication.getName());
+    }
+
+    private User getCurrentUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return userRepository.findById(UUID.fromString(authentication.getName()))
+                .orElseThrow(() -> new NotFoundException("User not found"));
+    }
+
+    public UserDto getCurrentUserDto() {
+        return userMapper.toDto(getCurrentUser());
     }
 }

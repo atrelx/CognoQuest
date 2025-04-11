@@ -2,7 +2,7 @@ import { create } from "zustand";
 import api from "../services/ApiService.js";
 
 const useAuthStore = create((set) => ({
-    isAuthenticated: false, // Изначально false, проверяем через бэкенд
+    isAuthenticated: false,
     isLoading: true,
     user: null,
     login: (userData) => {
@@ -15,11 +15,11 @@ const useAuthStore = create((set) => ({
     checkAuth: async () => {
         set({ isLoading: true });
         try {
-            const response = await api.get("/auth/check"); // Проверяем авторизацию
-            set({ isAuthenticated: true, isLoading: false }); // Если 200, пользователь авторизован
+            const response = await api.get("/auth/check");
+            set({ isAuthenticated: true, user: response.data, isLoading: false });
             return true;
         } catch (err) {
-            set({ isAuthenticated: false, user: null, isLoading: false}); // Если 401 или ошибка, не авторизован
+            set({ isAuthenticated: false, user: null, isLoading: false});
             return false;
         }
     },

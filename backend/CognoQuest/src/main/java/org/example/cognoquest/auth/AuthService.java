@@ -9,6 +9,7 @@ import org.example.cognoquest.oauth2.OAuth2ProviderFactory;
 import org.example.cognoquest.security.JwtUtil;
 import org.example.cognoquest.security.refreshToken.RefreshTokenRepository;
 import org.example.cognoquest.user.User;
+import org.example.cognoquest.user.dto.UserDto;
 import org.example.cognoquest.user.mapper.UserMapper;
 import org.example.cognoquest.user.UserRepository;
 import org.example.cognoquest.user.dto.OAuthLoginRequestDto;
@@ -43,7 +44,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void register(UserRegistrationDto dto, HttpServletResponse response) {
+    public UserDto register(UserRegistrationDto dto, HttpServletResponse response) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new RuntimeException("Email already taken");
         }
@@ -52,15 +53,18 @@ public class AuthService {
         user.setCreatedAt(Instant.now());
         user = userRepository.save(user);
         setAuthCookies(response, user.getId());
+
+        return userMapper.toDto(user);
     }
 
-    public void login(UserLoginDto dto, HttpServletResponse response) {
+    public UserDto login(UserLoginDto dto, HttpServletResponse response) {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
         if (!passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
         setAuthCookies(response, user.getId());
+        return userMapper.toDto(user);
     }
 
     @Transactional

@@ -7,7 +7,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.security.JwtUtil;
+import org.example.cognoquest.user.UserService;
 import org.example.cognoquest.user.dto.OAuthLoginRequestDto;
+import org.example.cognoquest.user.dto.UserDto;
 import org.example.cognoquest.user.dto.UserLoginDto;
 import org.example.cognoquest.user.dto.UserRegistrationDto;
 import org.springframework.http.HttpStatus;
@@ -25,15 +27,16 @@ import java.util.Arrays;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
     private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody UserLoginDto dto, HttpServletResponse response) {
+    public ResponseEntity<UserDto> login(@Valid @RequestBody UserLoginDto dto, HttpServletResponse response) {
         try {
             System.out.println("Attempting login");
-            authService.login(dto, response);
+            UserDto userDto = authService.login(dto, response);
             System.out.println("Login successful");
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(userDto);
         } catch (RuntimeException e) {
             System.out.println("Error in login: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
@@ -51,10 +54,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@Valid @RequestBody UserRegistrationDto dto, HttpServletResponse response) {
+    public ResponseEntity<UserDto> register(@Valid @RequestBody UserRegistrationDto dto, HttpServletResponse response) {
         try {
-            authService.register(dto, response);
-            return ResponseEntity.ok().build();
+            UserDto userDto = authService.register(dto, response);
+            return ResponseEntity.ok(userDto);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
@@ -95,7 +98,7 @@ public class AuthController {
     }
 
     @GetMapping("/check")
-    public ResponseEntity<Void> checkAuth(HttpServletRequest request) {
+    public ResponseEntity<UserDto> checkAuth(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         String token = Arrays.stream(cookies)
                 .filter(c -> "access_token".equals(c.getName()))
@@ -104,8 +107,10 @@ public class AuthController {
                 .orElse(null);
 
         if (token != null && jwtUtil.validateAccessToken(token)) {
-            return ResponseEntity.ok().build();
+            UserDto currentUser = userService.getCurrentUserDto();
+            return ResponseEntity.ok(currentUser);
         }
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
