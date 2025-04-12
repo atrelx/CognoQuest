@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,13 +31,23 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-
-    @PutMapping("/me/update")
-    public ResponseEntity<UserDto> updateUser(@RequestBody @Valid UserUpdateDto userUpdateDto) {
-        return ResponseEntity.ok(userService.updateUser(userUpdateDto));
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUserProfile() {
+        return ResponseEntity.ok(userService.getCurrentUserDto());
     }
 
-    @PutMapping("/me/update/change-password")
+    @PutMapping(value = "/me/update", consumes = { "multipart/form-data" })
+    public ResponseEntity<UserDto> updateUser(
+            @RequestParam("name") String name,
+            @RequestParam(value = "pictureFile", required = false) MultipartFile pictureFile
+    ) {
+        UserUpdateDto updateDto = new UserUpdateDto();
+        updateDto.setName(name);
+        return ResponseEntity.ok(userService.updateUser(updateDto, pictureFile));
+    }
+
+
+    @PutMapping("/me/password")
     public ResponseEntity<Void> changePassword(@RequestBody @Valid PasswordChangeDto passwordChangeDto) {
         userService.changePassword(passwordChangeDto);
         return ResponseEntity.noContent().build();

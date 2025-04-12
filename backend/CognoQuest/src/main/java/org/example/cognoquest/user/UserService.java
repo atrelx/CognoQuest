@@ -2,12 +2,14 @@ package org.example.cognoquest.user;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.cognoquest.Firebase.FirebaseStorageService;
 import org.example.cognoquest.exception.NotFoundException;
 import org.example.cognoquest.user.dto.*;
 import org.example.cognoquest.user.mapper.UserMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final FirebaseStorageService storageService;
 
 
     public UserDto getUserById(UUID id) {
@@ -34,15 +37,39 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public UserDto updateUser(UserUpdateDto updateDto) {
+    public UserDto updateUser(UserUpdateDto updateDto, MultipartFile pictureFile) {
         UUID userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         userMapper.updateUserFromDto(updateDto, user);
+        if (pictureFile != null && !pictureFile.isEmpty()) {
+            updateProfilePicture(user, pictureFile);
+        }
+
         user = userRepository.save(user);
 
         return userMapper.toDto(user);
+    }
+
+    private void updateProfilePicture(User user, MultipartFile file) {
+        UUID userId = user.getId();
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("No file provided for profile picture.");
+        }
+
+        try {
+            // Upload to Firebase Storage
+            // avatars/{userId}/profilePicture
+            String filePath = String.format("avatars/%s/profilePicture", userId.toString());
+            String fileUrl = storageService.uploadFile(file, filePath);
+
+            user.setProfilePicture(fileUrl);
+        } catch (Exception e) {
+            System.err.println("Failed to upload profile picture for user " + userId + ": " + e.getMessage());
+            throw new RuntimeException("Failed to update profile picture.", e);
+        }
     }
 
     public void changePassword(PasswordChangeDto dto) {

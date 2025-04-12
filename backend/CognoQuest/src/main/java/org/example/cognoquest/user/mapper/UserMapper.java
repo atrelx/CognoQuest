@@ -30,6 +30,7 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "profilePicture", ignore = true)
     @Mapping(target = "oauthProvider", ignore = true)
+    @Mapping(target = "email", ignore = true)
     @Mapping(target = "oauthId", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
     void updateUserFromDto(UserUpdateDto dto, @MappingTarget User user);

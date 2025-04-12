@@ -11,11 +11,6 @@ function Register() {
     const navigate = useNavigate();
     const { login, isAuthenticated } = useAuthStore();
 
-    // Если пользователь уже залогинен, перенаправляем на главную
-    if (isAuthenticated) {
-        return <Navigate to="/" />;
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
