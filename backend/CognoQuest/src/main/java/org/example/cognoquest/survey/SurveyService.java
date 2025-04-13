@@ -18,6 +18,8 @@ import org.example.cognoquest.question.mapper.QuestionMapper;
 import org.example.cognoquest.survey.mapper.SurveyMapper;
 import org.example.cognoquest.user.User;
 import org.example.cognoquest.user.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -226,52 +228,32 @@ public class SurveyService {
         return surveyMapper.toResultDto(survey, avgScore, completionCount, attemptResult);
     }
 
-    public List<SurveyClientResponseDto> getAllSurveys() {
-        List<Survey> surveys = surveyRepository.findAll();
-        return surveys.stream()
-                .map(survey -> {
-                    SurveyClientResponseDto dto = surveyMapper.toClientResponseDto(survey);
-                    dto.getQuestions().forEach(q -> {
-                        q.setOptions(optionMapper.toClientResponseDto(
-                                optionRepository.findByQuestionId(q.getId())));
-                        q.setMatchingPairs(matchingPairMapper.toClientResponseDto(
-                                matchingPairRepository.findByQuestionId(q.getId())));
-                    });
-                    return dto;
-                })
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<SurveyListDto> getAllSurveys(String titleQuery, Pageable pageable) {
+        Page<Survey> surveyPage = surveyRepository.findByTitleContainingIgnoreCaseWithCreator(titleQuery, pageable);
+
+        return surveyPage.map(surveyMapper::toListDto);
     }
 
-    public List<SurveyClientResponseDto> getUserSurveys(String userId) {
-        List<Survey> surveys = surveyRepository.findByCreatedById(UUID.fromString(userId));
-        return surveys.stream()
-                .map(survey -> {
-                    SurveyClientResponseDto dto = surveyMapper.toClientResponseDto(survey);
-                    dto.getQuestions().forEach(q -> {
-                        q.setOptions(optionMapper.toClientResponseDto(
-                                optionRepository.findByQuestionId(q.getId())));
-                        q.setMatchingPairs(matchingPairMapper.toClientResponseDto(
-                                matchingPairRepository.findByQuestionId(q.getId())));
-                    });
-                    return dto;
-                })
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<SurveyListDto> getUserSurveys(String userId, String titleQuery, Pageable pageable) {
+        Page<Survey> surveyPage = surveyRepository.findByCreatedByIdAndTitleContainingIgnoreCaseWithCreator(
+                UUID.fromString(userId), titleQuery, pageable
+        );
+        return surveyPage.map(surveyMapper::toListDto);
     }
 
+    @Transactional(readOnly = true)
     public SurveyClientResponseDto getSurvey(UUID surveyId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new NotFoundException("Survey not found"));
 
         SurveyClientResponseDto dto = surveyMapper.toClientResponseDto(survey);
-        dto.getQuestions().forEach(q -> {
-            q.setOptions(optionMapper.toClientResponseDto(
-                    optionRepository.findByQuestionId(q.getId())));
-            q.setMatchingPairs(matchingPairMapper.toClientResponseDto(
-                    matchingPairRepository.findByQuestionId(q.getId())));
-        });
+        dto.setQuestions(getSurveyQuestions(surveyId));
         return dto;
     }
 
+    @Transactional(readOnly = true)
     public List<QuestionClientResponseDto> getSurveyQuestions(UUID surveyId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new NotFoundException("Survey not found"));

@@ -4,6 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.question.dto.QuestionClientResponseDto;
 import org.example.cognoquest.survey.dto.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -25,16 +29,22 @@ public class SurveyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SurveyClientResponseDto>> getSurveys() {
-        List<SurveyClientResponseDto> surveys = surveyService.getAllSurveys();
-        return ResponseEntity.ok(surveys);
+    public ResponseEntity<Page<SurveyListDto>> getSurveys(
+            @RequestParam(required = false) String title,
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        Page<SurveyListDto> surveysPage = surveyService.getAllSurveys(title, pageable);
+        return ResponseEntity.ok(surveysPage);
     }
 
     @GetMapping("/user/surveys")
-    public ResponseEntity<List<SurveyClientResponseDto>> getUserSurveys() {
+    public ResponseEntity<Page<SurveyListDto>> getUserSurveys(
+            @RequestParam(required = false) String title,
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
         String userId = getCurrentUserId();
-        List<SurveyClientResponseDto> surveys = surveyService.getUserSurveys(userId);
-        return ResponseEntity.ok(surveys);
+        Page<SurveyListDto> surveysPage = surveyService.getUserSurveys(userId, title, pageable);
+        return ResponseEntity.ok(surveysPage);
     }
 
     @GetMapping("/{surveyId}")

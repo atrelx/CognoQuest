@@ -53,4 +53,10 @@ public interface SurveyMapper {
     @Mapping(target = "createdByName", source = "createdBy.name")
     @Mapping(target = "questions", expression = "java(survey.getQuestions().stream().map(questionMapper::toClientResponseDto).collect(java.util.stream.Collectors.toList()))")
     SurveyClientResponseDto toClientResponseDto(Survey survey);
+
+    @Mapping(target = "createdBy", source = "createdBy.id")
+    @Mapping(target = "createdByName", source = "createdBy.name")
+    @Mapping(target = "startDate", source = "startDate")
+    @Mapping(target = "endDate", source = "endDate")
+    SurveyListDto toListDto(Survey survey);
 }
