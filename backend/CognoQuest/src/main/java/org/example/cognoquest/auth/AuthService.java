@@ -4,8 +4,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
-import org.example.cognoquest.oauth2.OAuth2Provider;
-import org.example.cognoquest.oauth2.OAuth2ProviderFactory;
 import org.example.cognoquest.security.JwtUtil;
 import org.example.cognoquest.security.refreshToken.RefreshTokenRepository;
 import org.example.cognoquest.user.User;
@@ -29,17 +27,15 @@ public class AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final OAuth2ProviderFactory oauth2ProviderFactory;
     private final RefreshTokenRepository refreshTokenRepository;
 
     public AuthService(UserRepository userRepository, UserMapper userMapper,
                        PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
-                       OAuth2ProviderFactory oauth2ProviderFactory, RefreshTokenRepository refreshTokenRepository) {
+                       RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.oauth2ProviderFactory = oauth2ProviderFactory;
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
@@ -100,14 +96,6 @@ public class AuthService {
         setAuthCookies(response, user.getId());
     }
 
-    public OAuthLoginRequestDto exchangeCodeForToken(String provider, String code) {
-        OAuth2Provider oauthProvider = oauth2ProviderFactory.getProvider(provider);
-        if (oauthProvider == null) {
-            throw new RuntimeException("Unsupported OAuth provider");
-        }
-        return oauthProvider.exchangeCodeForToken(code);
-    }
-
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
         String refreshToken = Arrays.stream(cookies)
@@ -124,7 +112,7 @@ public class AuthService {
         setAuthCookies(response, userId);
     }
 
-    private void setAuthCookies(HttpServletResponse response, UUID userId) {
+    public void setAuthCookies(HttpServletResponse response, UUID userId) {
         String accessToken = jwtUtil.generateAccessToken(userId);
         String refreshToken = jwtUtil.generateRefreshToken(userId);
 
@@ -141,9 +129,10 @@ public class AuthService {
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge((int) (jwtUtil.refreshExpiration / 1000));
         response.addCookie(refreshCookie);
+        System.out.println("Auth cookies set for user: " + userId);
     }
 
-    private void clearAuthCookies(HttpServletResponse response) {
+    public void clearAuthCookies(HttpServletResponse response) {
         Cookie accessCookie = new Cookie("access_token", "");
         accessCookie.setHttpOnly(true);
         accessCookie.setSecure(false); // TODO: set to true in production

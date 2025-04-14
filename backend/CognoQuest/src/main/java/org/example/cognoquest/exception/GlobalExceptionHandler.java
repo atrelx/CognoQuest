@@ -64,4 +64,13 @@ public class GlobalExceptionHandler {
         response.put("message", "Invalid UUID format: " + ex.getValue());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(OAuth2AuthenticationProcessingException.class)
+    public ResponseEntity<Map<String, Object>> handleOAuth2AuthenticationProcessingException(OAuth2AuthenticationProcessingException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", HttpStatus.UNAUTHORIZED.value());
+        response.put("error", "OAuth2 authentication failed");
+        response.put("message", ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
 }

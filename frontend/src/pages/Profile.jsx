@@ -25,6 +25,8 @@ function Profile() {
     const [passwordSuccess, setPasswordSuccess] = useState(null);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
+    const isOAuthUser = user?.oauthProvider != null && user.oauthProvider !== "";
+
     const getPictureUrl = (baseUrl) => {
         if (!baseUrl) return defaultAvatar;
         return `${baseUrl}?t=${new Date().getTime()}`;
@@ -256,7 +258,7 @@ function Profile() {
                                 </div>
                             )}
                         </form>
-                        {!isEditingProfile && (
+                        {!isEditingProfile && !isOAuthUser && (
                             <div className="mt-6 border-t pt-4">
                                 <button
                                     onClick={() => setIsPasswordModalOpen(true)}

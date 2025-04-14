@@ -16,9 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.Arrays;
 
 @RestController
@@ -70,30 +67,6 @@ public class AuthController {
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-    }
-
-    @GetMapping("/oauth-callback")
-    public void oauthCallbackGet(@RequestParam("code") String code,
-                                 @RequestParam(value = "state", required = false) String state,
-                                 HttpServletResponse response) throws IOException {
-        try {
-            String provider = "unknown";
-            if (state != null) {
-                String decodedState = URLDecoder.decode(state, "UTF-8");
-                ObjectMapper objectMapper = new ObjectMapper();
-                var stateMap = objectMapper.readValue(decodedState, java.util.Map.class);
-                provider = (String) stateMap.getOrDefault("provider", "unknown");
-            }
-
-            System.out.println("Processing OAuth callback: provider=" + provider + ", code=" + code);
-            OAuthLoginRequestDto oauthDto = authService.exchangeCodeForToken(provider, code);
-            authService.oauthLogin(oauthDto, response);
-            response.sendRedirect("http://localhost:5173/home");
-        } catch (Exception e) {
-            System.out.println("Error in OAuth callback: " + e.getMessage());
-            String errorUrl = "http://localhost:5173/login?error=" + URLEncoder.encode(e.getMessage(), "UTF-8");
-            response.sendRedirect(errorUrl);
         }
     }
 
