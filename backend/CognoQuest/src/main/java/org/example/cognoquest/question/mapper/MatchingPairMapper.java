@@ -4,6 +4,7 @@ import org.example.cognoquest.question.MatchingPair;
 import org.example.cognoquest.question.dto.MatchingPairClientResponseDto;
 import org.example.cognoquest.question.dto.MatchingPairCreateDto;
 import org.example.cognoquest.question.Question;
+import org.example.cognoquest.question.dto.MatchingPairEditDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -17,8 +18,13 @@ public interface MatchingPairMapper {
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "leftSide", source = "leftSide")
-    @Mapping(target = "rightSide", source = "rightSide")
     MatchingPairClientResponseDto toClientResponseDto(MatchingPair matchingPair);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "leftSide", source = "leftSide")
+    @Mapping(target = "rightSide", source = "rightSide")
+    MatchingPairEditDto toEditDto(MatchingPair matchingPair);
+    List<MatchingPairEditDto> toEditDtoList(List<MatchingPair> matchingPairs);
 
     List<MatchingPairClientResponseDto> toClientResponseDto(List<MatchingPair> matchingPairs);
 }

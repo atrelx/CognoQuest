@@ -53,6 +53,13 @@ public class SurveyController {
         return ResponseEntity.ok(survey);
     }
 
+    @GetMapping("/{surveyId}/edit")
+    public ResponseEntity<SurveyEditDto> getSurveyForEdit(@PathVariable UUID surveyId) {
+        String userId = getCurrentUserId();
+        SurveyEditDto survey = surveyService.getSurveyForEdit(surveyId, userId);
+        return ResponseEntity.ok(survey);
+    }
+
     @GetMapping("/{surveyId}/questions")
     public ResponseEntity<List<QuestionClientResponseDto>> getSurveyQuestions(@PathVariable UUID surveyId) {
         List<QuestionClientResponseDto> questions = surveyService.getSurveyQuestions(surveyId);
@@ -60,7 +67,8 @@ public class SurveyController {
     }
 
     @PutMapping("/{surveyId}")
-    public ResponseEntity<UUID> updateSurvey(@PathVariable UUID surveyId, @Valid @RequestBody SurveyUpdateDto dto) {
+    public ResponseEntity<UUID> updateSurvey(@PathVariable UUID surveyId,
+                                             @Valid @RequestBody SurveyCreateDto dto) {
         String userId = getCurrentUserId();
         UUID updatedSurveyId = surveyService.updateSurvey(surveyId, dto, userId);
         return ResponseEntity.ok(updatedSurveyId);

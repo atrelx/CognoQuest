@@ -16,6 +16,9 @@ function Home() {
                 >
                     Create Survey
                 </Link>
+                <Link to="/my-surveys" className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-lg">
+                    My Surveys
+                </Link>
                 <Link
                     to="/surveys"
                     className="inline-block px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700"

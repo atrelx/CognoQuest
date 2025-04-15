@@ -39,6 +39,10 @@ public interface SurveyMapper {
     @Mapping(target = "questions", source = "questions")
     SurveyResponseDto toResponseDto(Survey survey);
 
+
+    @Mapping(target = "questions", ignore = true) // Is being set in the service
+    SurveyEditDto toEditDto(Survey survey);
+
     @Mapping(target = "id", source = "survey.id")
     @Mapping(target = "title", source = "survey.title")
     @Mapping(target = "description", source = "survey.description")
@@ -51,7 +55,8 @@ public interface SurveyMapper {
 
     @Mapping(target = "createdBy", source = "createdBy.id")
     @Mapping(target = "createdByName", source = "createdBy.name")
-    @Mapping(target = "questions", expression = "java(survey.getQuestions().stream().map(questionMapper::toClientResponseDto).collect(java.util.stream.Collectors.toList()))")
+//    @Mapping(target = "questions", expression = "java(survey.getQuestions().stream().map(questionMapper::toClientResponseDto).collect(java.util.stream.Collectors.toList()))")
+    @Mapping(target = "questions", ignore = true) // Is being set in the service
     SurveyClientResponseDto toClientResponseDto(Survey survey);
 
     @Mapping(target = "createdBy", source = "createdBy.id")

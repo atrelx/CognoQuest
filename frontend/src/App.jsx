@@ -6,6 +6,8 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import CreateSurvey from "./pages/CreateSurvey";
 import Surveys from "./pages/Surveys";
+import MySurveys from "./pages/MySurveys";
+import EditSurvey from "./pages/EditSurvey";
 import TakeSurvey from "./pages/TakeSurvey";
 import SurveyResult from "./pages/SurveyResult";
 import Profile from "./pages/Profile";
@@ -57,10 +59,26 @@ function App() {
                         }
                     />
                     <Route
+                        path="/my-surveys"
+                        element={
+                            <ProtectedRoute>
+                                <MySurveys />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/survey/:id"
                         element={
                             <ProtectedRoute>
                                 <TakeSurvey />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/edit-survey/:id"
+                        element={
+                            <ProtectedRoute>
+                                <EditSurvey />
                             </ProtectedRoute>
                         }
                     />
