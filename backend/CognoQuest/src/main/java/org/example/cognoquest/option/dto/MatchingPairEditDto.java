@@ -1,10 +1,10 @@
-package org.example.cognoquest.question.dto;
+package org.example.cognoquest.option.dto;
 
 import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class MatchingPairEditDto {
+public class MatchingPairEditDto implements MatchingPairData {
     private UUID id;
     private String leftSide;
     private String rightSide;

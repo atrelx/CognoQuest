@@ -4,11 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.answer.*;
 import org.example.cognoquest.answer.dto.AnswerCreateDto;
 import org.example.cognoquest.answer.dto.AnswerResultDto;
+import org.example.cognoquest.answer.dto.MatchingAnswerDto;
+import org.example.cognoquest.option.MatchingPair;
+import org.example.cognoquest.option.MatchingPairRepository;
+import org.example.cognoquest.option.dto.MatchingPairData;
+import org.example.cognoquest.option.dto.OptionData;
+import org.example.cognoquest.option.dto.OptionEditDto;
 import org.example.cognoquest.option.mapper.OptionMapper;
+import org.example.cognoquest.option.dto.MatchingPairEditDto;
 import org.example.cognoquest.question.dto.QuestionClientResponseDto;
-import org.example.cognoquest.question.dto.QuestionCreateDto;
+import org.example.cognoquest.question.dto.QuestionData;
 import org.example.cognoquest.question.dto.QuestionEditDto;
-import org.example.cognoquest.question.mapper.MatchingPairMapper;
+import org.example.cognoquest.option.mapper.MatchingPairMapper;
 import org.example.cognoquest.survey.dto.*;
 import org.example.cognoquest.answer.mapper.AnswerMapper;
 import org.example.cognoquest.exception.ForbiddenException;
@@ -28,10 +35,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,25 +63,37 @@ public class SurveyService {
         User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        validateSurveyQuestions(dto.getQuestions());
+        validateQuestions(dto.getQuestions());
 
         Survey survey = surveyMapper.toEntity(dto, user);
         survey = surveyRepository.save(survey);
 
         List<Question> questions = new ArrayList<>();
         for (var qDto : dto.getQuestions()) {
-            Question question = new Question(null, survey, qDto.getQuestionText(), qDto.getType(), qDto.getCorrectTextAnswer());
+            Question question = new Question();
+            question.setSurvey(survey);
+            question.setQuestionText(qDto.getQuestionText());
+            question.setType(qDto.getType());
+            question.setCorrectTextAnswer(qDto.getCorrectTextAnswer());
             question = questionRepository.save(question);
 
             if (qDto.getOptions() != null) {
                 for (var oDto : qDto.getOptions()) {
-                    Option option = new Option(null, question, oDto.getOptionText(), oDto.getIsCorrect());
+                    System.out.println("  Processing Option DTO: text=" + oDto.getOptionText() + ", isCorrect=" + oDto.getIsCorrect());
+                    Option option = new Option();
+                    option.setQuestion(question);
+                    option.setOptionText(oDto.getOptionText());
+                    option.setCorrect(oDto.getIsCorrect());
+                    System.out.println("    Created/Mapped Option Entity: text=" + option.getOptionText() + ", isCorrect=" + option.isCorrect());
                     optionRepository.save(option);
                 }
             }
             if (qDto.getMatchingPairs() != null) {
                 for (var mpDto : qDto.getMatchingPairs()) {
-                    MatchingPair matchingPair = new MatchingPair(null, question, mpDto.getLeftSide(), mpDto.getRightSide());
+                    MatchingPair matchingPair = new MatchingPair();
+                    matchingPair.setQuestion(question);
+                    matchingPair.setLeftSide(mpDto.getLeftSide());
+                    matchingPair.setRightSide(mpDto.getRightSide());
                     matchingPairRepository.save(matchingPair);
                 }
             }
@@ -89,53 +106,72 @@ public class SurveyService {
     }
 
     @Transactional
-    public UUID updateSurvey(UUID surveyId, SurveyCreateDto dto, String userId) {
+    public UUID updateSurvey(UUID surveyId, SurveyEditDto dto, String userId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new NotFoundException("Survey not found"));
-
         if (!survey.getCreatedBy().getId().toString().equals(userId)) {
             throw new ForbiddenException("Only the creator can update the survey");
         }
 
-        validateSurveyQuestions(dto.getQuestions());
-
+        // Update survey metadata
         survey.setTitle(dto.getTitle());
         survey.setDescription(dto.getDescription());
         survey.setStartDate(dto.getStartDate());
         survey.setEndDate(dto.getEndDate());
 
-        List<Question> existingQuestions = questionRepository.findBySurveyId(surveyId);
-        for (Question q : existingQuestions) {
-            optionRepository.deleteByQuestionId(q.getId());
-            matchingPairRepository.deleteByQuestionId(q.getId());
-        }
-        questionRepository.deleteAll(existingQuestions);
-        survey.getQuestions().clear();
+        // Prepare map of existing questions
+        Map<UUID, Question> existingQuestionsMap = questionRepository.findBySurveyId(surveyId).stream()
+                .collect(Collectors.toMap(Question::getId, Function.identity()));
 
-        questionRepository.flush();
+        // Process questions
+        List<Question> finalQuestions = new ArrayList<>();
+        Set<UUID> processedQuestionIds = new HashSet<>();
 
-        List<Question> newQuestions = new ArrayList<>();
-        for (QuestionCreateDto qDto : dto.getQuestions()) {
-            Question question = new Question(null, survey, qDto.getQuestionText(), qDto.getType(), qDto.getCorrectTextAnswer());
-            question = questionRepository.save(question);
+        for (QuestionEditDto qDto : dto.getQuestions()) {
+            Question question;
+            if (qDto.getId() != null && existingQuestionsMap.containsKey(qDto.getId())) {
+                // Update existing question
+                question = existingQuestionsMap.get(qDto.getId());
+                System.out.println("Updating existing question ID: " + question.getId());
+                question.setQuestionText(qDto.getQuestionText());
+                question.setType(qDto.getType());
+                question.setCorrectTextAnswer(qDto.getCorrectTextAnswer());
 
-            if (qDto.getOptions() != null) {
-                for (var oDto : qDto.getOptions()) {
-                    Option option = optionMapper.toEntity(oDto, question);
-                    optionRepository.save(option);
-                }
+                // Update options and pairs (no preemptive deletion)
+                saveOptionsAndPairsFromDto(qDto, question);
+
+                processedQuestionIds.add(question.getId());
+            } else {
+                // Add new question
+                System.out.println("Adding new question: " + qDto.getQuestionText());
+                question = new Question();
+                question.setSurvey(survey);
+                question.setQuestionText(qDto.getQuestionText());
+                question.setType(qDto.getType());
+                question.setCorrectTextAnswer(qDto.getCorrectTextAnswer());
+                question = questionRepository.save(question);
+
+                // Save options and pairs for new question
+                saveOptionsAndPairsFromDto(qDto, question);
             }
-
-            if (qDto.getMatchingPairs() != null) {
-                for (var mpDto : qDto.getMatchingPairs()) {
-                    MatchingPair matchingPair = matchingPairMapper.toEntity(mpDto, question); // Użyj mapera
-                    matchingPairRepository.save(matchingPair);
-                }
-            }
-            newQuestions.add(question);
+            finalQuestions.add(question);
         }
-        survey.setQuestions(newQuestions);
+
+        // Delete questions not included in DTO
+        List<UUID> idsToDelete = existingQuestionsMap.keySet().stream()
+                .filter(id -> !processedQuestionIds.contains(id))
+                .toList();
+        if (!idsToDelete.isEmpty()) {
+            System.out.println("Deleting questions not present in DTO: " + idsToDelete);
+            answerRepository.deleteByQuestionIdIn(idsToDelete);
+            answerRepository.flush();
+            questionRepository.deleteAllById(idsToDelete);
+            questionRepository.flush();
+        }
+
+        // Save survey
         surveyRepository.save(survey);
+        System.out.println("Survey update finished for ID: " + survey.getId());
 
         return survey.getId();
     }
@@ -180,7 +216,10 @@ public class SurveyService {
             );
         }
 
-        SurveyAttempt attempt = new SurveyAttempt(null, survey, user, OffsetDateTime.now(), null, null);
+        SurveyAttempt attempt = new SurveyAttempt();
+        attempt.setSurvey(survey);
+        attempt.setUser(user);
+        attempt.setStartedAt(OffsetDateTime.now());
         attempt = attemptRepository.save(attempt);
 
         int correctAnswers = 0;
@@ -219,19 +258,14 @@ public class SurveyService {
                 case Matching:
                     if (answerDto.getMatchingAnswers() != null) {
                         for (var maDto : answerDto.getMatchingAnswers()) {
-                            // --- ZMIANA TUTAJ ---
-                            // Pobierz encję MatchingPair na podstawie ID z DTO
                             MatchingPair pair = matchingPairRepository.findById(maDto.getPairId())
                                     .orElseThrow(() -> new NotFoundException("MatchingPair " + maDto.getPairId() + " not found for question " + question.getId()));
 
-                            // Sprawdź, czy para należy do właściwego pytania
                             if (!pair.getQuestion().getId().equals(question.getId())) {
                                 throw new IllegalArgumentException("MatchingPair " + maDto.getPairId() + " does not belong to question " + question.getId());
                             }
 
-                            // Wywołaj mapper z pobraną encją MatchingPair
                             AnswerMatching answerMatching = answerMapper.toMatchingEntity(maDto, answer, pair);
-                            // --- Koniec zmian ---
                             answerMatchingRepository.save(answerMatching);
                         }
                     }
@@ -244,15 +278,9 @@ public class SurveyService {
                     answerText.setAnswer(answer);
                     answerText.setTextValue(answerDto.getTextAnswer());
 
-                    //AnswerText answerText = answerMapper.toTextEntity(answerDto, answer);
-                    System.out.println("Manually Creating AnswerText: [Value: '" + answerText.getTextValue() + "', Answer ID: " + (answerText.getAnswer() != null ? answerText.getAnswer().getId() : "null") + "]");
-                    //answerTextRepository.save(answerText);
                     try {
-                        System.out.println("Attempting to save AnswerText...");
                         answerTextRepository.save(answerText);
-                        System.out.println("Successfully saved AnswerText with ID: " + answerText.getId() + " for Answer ID: " + answer.getId());
                     } catch (Exception e) {
-                        System.err.println("!!! ERROR saving AnswerText for Answer ID: " + answer.getId() + " !!!");
                         e.printStackTrace();
                         throw e;
                     }
@@ -276,10 +304,10 @@ public class SurveyService {
         Double avgScore = attemptRepository.findAverageScoreBySurveyId(surveyId)
                 .orElse(null);
         Long completionCount = attemptRepository.countBySurveyIdAndCompletedAtNotNull(surveyId);
-        SurveyAttempt attempt = userId != null ? attemptRepository.findBySurveyIdAndUserId(surveyId, UUID.fromString(userId))
+        SurveyAttempt latestAttempt = userId != null ? attemptRepository.findLatestBySurveyIdAndUserId(surveyId, UUID.fromString(userId))
                 .orElse(null) : null;
 
-        SurveyAttemptResultDto attemptResult = attempt != null ? getAttemptResult(attempt) : null;
+        SurveyAttemptResultDto attemptResult = latestAttempt != null ? getAttemptResult(latestAttempt) : null;
         return surveyMapper.toResultDto(survey, avgScore, completionCount, attemptResult);
     }
 
@@ -335,14 +363,18 @@ public class SurveyService {
         SurveyEditDto surveyDto = surveyMapper.toEditDto(survey);
         List<Question> questions = questionRepository.findBySurveyId(surveyId);
 
+        System.out.println("--- SurveyService.getSurveyForEdit ---");
         // Mapping questions to DTOs by hand
         List<QuestionEditDto> questionDtos = questions.stream().map(question -> {
             QuestionEditDto questionDto = questionMapper.toEditDto(question);
-            List<Option> options = optionRepository.findByQuestionId(question.getId());
-            questionDto.setOptions(optionMapper.toEditDtoList(options));
-            List<MatchingPair> pairs = matchingPairRepository.findByQuestionId(question.getId());
 
-            questionDto.setMatchingPairs(matchingPairMapper.toEditDtoList(pairs));
+            List<Option> options = optionRepository.findByQuestionId(question.getId());
+            List<OptionEditDto> optionEditDtos = optionMapper.toEditDtoList(options);
+            questionDto.setOptions(optionEditDtos);
+
+            List<MatchingPair> pairs = matchingPairRepository.findByQuestionId(question.getId());
+            List<MatchingPairEditDto> pairEditDtos = matchingPairMapper.toEditDtoList(pairs);
+            questionDto.setMatchingPairs(pairEditDtos);
             return questionDto;
         }).collect(Collectors.toList());
 
@@ -363,27 +395,68 @@ public class SurveyService {
     }
 
     private boolean checkAnswerCorrectness(AnswerCreateDto dto, Question question) {
-        switch (question.getType()) {
-            case SingleChoice:
-                List<Option> correctOptions = optionRepository.findByQuestionIdAndIsCorrect(question.getId(), true);
-                return dto.getSelectedOptionIds() != null && dto.getSelectedOptionIds().size() == 1 &&
-                        correctOptions.size() == 1 &&
-                        dto.getSelectedOptionIds().get(0).equals(correctOptions.get(0).getId());
-            case MultipleChoice:
-                List<UUID> correctOptionIds = optionRepository.findByQuestionIdAndIsCorrect(question.getId(), true)
-                        .stream().map(Option::getId).toList();
-                return dto.getSelectedOptionIds() != null && dto.getSelectedOptionIds().containsAll(correctOptionIds) &&
-                        correctOptionIds.containsAll(dto.getSelectedOptionIds());
-            case TextInput:
-                return dto.getTextAnswer() != null && dto.getTextAnswer().equalsIgnoreCase(question.getCorrectTextAnswer());
-            case Matching:
-                List<MatchingPair> pairs = matchingPairRepository.findByQuestionId(question.getId());
-                return dto.getMatchingAnswers() != null && dto.getMatchingAnswers().stream().allMatch(ma ->
-                        pairs.stream().anyMatch(p -> p.getId().equals(ma.getPairId()) &&
-                                p.getRightSide().equals(ma.getSelectedRightSide())));
-            default:
-                return false;
+        boolean isCorrect = false;
+
+        try {
+            switch (question.getType()) {
+                case SingleChoice:
+                    List<Option> correctSingleOptions = optionRepository.findByQuestionIdAndIsCorrect(question.getId(), true);
+
+                    // Check if the question has a single correct option set
+                    if (dto.getSelectedOptionIds() != null && dto.getSelectedOptionIds().size() == 1 &&
+                            correctSingleOptions.size() == 1) {
+                        UUID userAnswerId = dto.getSelectedOptionIds().get(0);
+                        UUID correctAnswerId = correctSingleOptions.get(0).getId();
+                        System.out.println("  Comparing User(Single): " + userAnswerId + " with Correct: " + correctAnswerId); // Loguj porównywane ID
+                        isCorrect = userAnswerId.equals(correctAnswerId);
+                    } else {
+                        isCorrect = false;
+                    }
+                    break;
+                case MultipleChoice:
+                    // Check if the question has multiple correct options set
+                    List<UUID> correctMultipleOptionIds = optionRepository.findByQuestionIdAndIsCorrect(question.getId(), true)
+                            .stream().map(Option::getId).toList();
+                    List<UUID> userSelectedIds = dto.getSelectedOptionIds() != null ? dto.getSelectedOptionIds() : List.of();
+
+                    isCorrect = userSelectedIds.size() == correctMultipleOptionIds.size() &&
+                            correctMultipleOptionIds.containsAll(userSelectedIds) &&
+                            userSelectedIds.containsAll(correctMultipleOptionIds);
+                    break;
+                case TextInput:
+                    // Check if the question has a correct text answer set
+                    String correctAnswerText = question.getCorrectTextAnswer();
+                    String userAnswerText = dto.getTextAnswer();
+                    isCorrect = userAnswerText != null && correctAnswerText != null &&
+                            userAnswerText.trim().equalsIgnoreCase(correctAnswerText.trim());
+                    break;
+                case Matching:
+                    // Check if the question has matching pairs
+                    List<MatchingPair> correctPairs = matchingPairRepository.findByQuestionId(question.getId());
+                    List<MatchingAnswerDto> userMatchingAnswers = dto.getMatchingAnswers();
+
+                    if (userMatchingAnswers != null && userMatchingAnswers.size() == correctPairs.size()) {
+                        isCorrect = userMatchingAnswers.stream().allMatch(ma ->
+                                correctPairs.stream().anyMatch(p ->
+                                        p.getId().equals(ma.getPairId()) &&
+                                                p.getRightSide() != null &&
+                                                p.getRightSide().equals(ma.getSelectedRightSide())
+                                )
+                        );
+                    } else {
+                        isCorrect = false;
+                    }
+                    break;
+                default:
+                    isCorrect = false;
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            isCorrect = false;
         }
+
+        return isCorrect;
     }
 
     private SurveyAttemptResultDto getAttemptResult(SurveyAttempt attempt) {
@@ -430,59 +503,81 @@ public class SurveyService {
         }
     }
 
-    private void validateSurveyQuestions(List<QuestionCreateDto> questions) {
+    private void saveOptionsAndPairsFromDto(QuestionEditDto qDto, Question question) {
+        // Handle Options
+        if (!CollectionUtils.isEmpty(qDto.getOptions())) {
+            // Fetch existing options for the question
+            List<Option> existingOptions = optionRepository.findByQuestionId(question.getId());
+            Map<UUID, Option> existingOptionsMap = existingOptions.stream()
+                    .collect(Collectors.toMap(Option::getId, Function.identity()));
+
+            // Track which options are processed to identify ones to delete
+            Set<UUID> processedOptionIds = new HashSet<>();
+
+            // Process each option from DTO
+            for (OptionEditDto oDto : qDto.getOptions()) {
+                Option option;
+                if (oDto.getId() != null && existingOptionsMap.containsKey(oDto.getId())) {
+                    // Update existing option
+                    option = existingOptionsMap.get(oDto.getId());
+                    option.setOptionText(oDto.getOptionText());
+                    option.setCorrect(oDto.getIsCorrect());
+                    processedOptionIds.add(oDto.getId());
+                } else {
+                    // Create new option
+                    option = optionMapper.toEntity(oDto, question);
+                }
+                optionRepository.save(option);
+            }
+
+            // Delete options that were not included in the DTO
+            List<UUID> optionsToDelete = existingOptionsMap.keySet().stream()
+                    .filter(id -> !processedOptionIds.contains(id))
+                    .toList();
+            if (!optionsToDelete.isEmpty()) {
+                optionRepository.deleteAllById(optionsToDelete);
+            }
+        } else {
+            // If no options in DTO, delete all existing options
+            optionRepository.deleteByQuestionId(question.getId());
+        }
+
+        // Handle Matching Pairs (unchanged, assuming no issues with pairs)
+        if (!CollectionUtils.isEmpty(qDto.getMatchingPairs())) {
+            qDto.getMatchingPairs().forEach(mpDto -> {
+                MatchingPair matchingPair = matchingPairMapper.toEntity(mpDto, question);
+                matchingPairRepository.save(matchingPair);
+            });
+        }
+    }
+
+    private <Q extends QuestionData> void validateQuestions(List<Q> questions) {
         if (CollectionUtils.isEmpty(questions)) {
             throw new IllegalArgumentException("Survey must contain at least one question.");
         }
 
         for (int i = 0; i < questions.size(); i++) {
-            QuestionCreateDto qDto = questions.get(i);
+            Q qDto = questions.get(i);
             int questionNumber = i + 1;
 
-            if (qDto == null) {
-                throw new IllegalArgumentException("Question data cannot be null (at index " + i + ").");
-            }
-            if (!StringUtils.hasText(qDto.getQuestionText())) {
-                throw new IllegalArgumentException("Question text cannot be empty (for question #" + questionNumber + ").");
-            }
-            if (qDto.getType() == null) {
-                throw new IllegalArgumentException("Question type must be specified (for question #" + questionNumber + ").");
-            }
-
+            if (qDto == null) throw new IllegalArgumentException("Question data cannot be null (at index " + i + ").");
+            if (!StringUtils.hasText(qDto.getQuestionText())) throw new IllegalArgumentException("Question text cannot be empty (for question #" + questionNumber + ").");
+            if (qDto.getType() == null) throw new IllegalArgumentException("Question type must be specified (for question #" + questionNumber + ").");
 
             switch (qDto.getType()) {
-                case SingleChoice:
-                case MultipleChoice:
-                    if (CollectionUtils.isEmpty(qDto.getOptions())) {
-                        throw new IllegalArgumentException("Choice question #" + questionNumber + " must have at least one option.");
-                    }
-                    boolean hasCorrectOption = qDto.getOptions().stream()
-                            .anyMatch(opt -> opt != null && opt.getIsCorrect() != null && opt.getIsCorrect());
-                    if (!hasCorrectOption) {
-                        throw new IllegalArgumentException("Choice question #" + questionNumber + " must have at least one correct option marked.");
-                    }
-                    boolean anyOptionTextEmpty = qDto.getOptions().stream()
-                            .anyMatch(opt -> opt == null || !StringUtils.hasText(opt.getOptionText()));
-                    if (anyOptionTextEmpty) {
-                        throw new IllegalArgumentException("All options for question #" + questionNumber + " must have text.");
-                    }
+                case SingleChoice: case MultipleChoice:
+                    List<? extends OptionData> options = qDto.getOptions();
+                    if (CollectionUtils.isEmpty(options)) throw new IllegalArgumentException("Choice question #" + questionNumber + " must have at least one option.");
+                    if (options.stream().noneMatch(opt -> opt != null && opt.getIsCorrect() != null && opt.getIsCorrect())) throw new IllegalArgumentException("Choice question #" + questionNumber + " must have at least one correct option marked.");
+                    if (options.stream().anyMatch(opt -> opt == null || !StringUtils.hasText(opt.getOptionText()))) throw new IllegalArgumentException("All options for question #" + questionNumber + " must have text.");
                     break;
-
                 case TextInput:
-                    if (!StringUtils.hasText(qDto.getCorrectTextAnswer())) {
-                        throw new IllegalArgumentException("Text input question #" + questionNumber + " must have a correct answer defined.");
-                    }
+                    if (!StringUtils.hasText(qDto.getCorrectTextAnswer())) throw new IllegalArgumentException("Text input question #" + questionNumber + " must have a correct answer defined.");
                     break;
-
                 case Matching:
-                    if (CollectionUtils.isEmpty(qDto.getMatchingPairs())) {
-                        throw new IllegalArgumentException("Matching question #" + questionNumber + " must have at least one pair.");
-                    }
-                    boolean anyPairIncomplete = qDto.getMatchingPairs().stream()
-                            .anyMatch(p -> p == null || !StringUtils.hasText(p.getLeftSide()) || !StringUtils.hasText(p.getRightSide()));
-                    if (anyPairIncomplete) {
-                        throw new IllegalArgumentException("All matching pairs for question #" + questionNumber + " must have both left and right sides defined.");
-                    }
+                    List<? extends MatchingPairData> pairs = qDto.getMatchingPairs();
+                    if (CollectionUtils.isEmpty(pairs)) throw new IllegalArgumentException("Matching question #" + questionNumber + " must have at least one pair.");
+                    if (pairs.stream().anyMatch(p -> p == null || !StringUtils.hasText(p.getLeftSide()) || !StringUtils.hasText(p.getRightSide()))) throw new IllegalArgumentException("All matching pairs for question #" + questionNumber + " must have both left and right sides defined.");
                     break;
             }
         }

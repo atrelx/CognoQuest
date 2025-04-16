@@ -6,13 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.cognoquest.answer.Answer;
+import org.example.cognoquest.answer.AnswerOption;
 import org.example.cognoquest.question.Question;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.List;
 import java.util.UUID;
 
 /*
-    For SingleOption, MultipleOption, Matching questions
+    For SingleOption, MultipleOption
  */
 
 @NoArgsConstructor
@@ -40,4 +43,7 @@ public class Option {
     @NotNull
     @Column(name = "is_correct", nullable = false)
     private boolean isCorrect = false;
+
+    @OneToMany(mappedBy = "option", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<AnswerOption> answerOptions;
 }

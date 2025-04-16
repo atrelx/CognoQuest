@@ -5,10 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.cognoquest.answer.Answer;
 import org.example.cognoquest.user.User;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -39,5 +41,8 @@ public class SurveyAttempt {
     private OffsetDateTime completedAt;
 
     @Column(name = "score")
-    private Double score; // Балл за прохождение (например, процент правильных ответов)
+    private Double score;
+
+    @OneToMany(mappedBy = "attempt", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Answer> answers;
 }

@@ -1,5 +1,6 @@
 package org.example.cognoquest.question.mapper;
 
+import org.example.cognoquest.option.mapper.MatchingPairMapper;
 import org.example.cognoquest.option.mapper.OptionMapper;
 import org.example.cognoquest.question.Question;
 import org.example.cognoquest.question.dto.QuestionClientResponseDto;

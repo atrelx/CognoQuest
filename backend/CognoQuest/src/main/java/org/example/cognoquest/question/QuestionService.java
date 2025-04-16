@@ -3,6 +3,8 @@ package org.example.cognoquest.question;
 import lombok.RequiredArgsConstructor;
 import org.example.cognoquest.exception.ForbiddenException;
 import org.example.cognoquest.exception.NotFoundException;
+import org.example.cognoquest.option.MatchingPair;
+import org.example.cognoquest.option.MatchingPairRepository;
 import org.example.cognoquest.option.Option;
 import org.example.cognoquest.option.OptionRepository;
 import org.example.cognoquest.question.dto.QuestionCreateDto;
@@ -29,21 +31,14 @@ public class QuestionService {
             throw new ForbiddenException("Only the creator can add questions");
         }
 
-        Question question = new Question(null, survey, dto.getQuestionText(), dto.getType(), dto.getCorrectTextAnswer());
+        Question question = new Question();
+        question.setSurvey(survey);
+        question.setQuestionText(dto.getQuestionText());
+        question.setType(dto.getType());
+        question.setCorrectTextAnswer(dto.getCorrectTextAnswer());
         question = questionRepository.save(question);
 
-        if (dto.getOptions() != null) {
-            for (var oDto : dto.getOptions()) {
-                Option option = new Option(null, question, oDto.getOptionText(), oDto.getIsCorrect());
-                optionRepository.save(option);
-            }
-        }
-        if (dto.getMatchingPairs() != null) {
-            for (var mpDto : dto.getMatchingPairs()) {
-                MatchingPair matchingPair = new MatchingPair(null, question, mpDto.getLeftSide(), mpDto.getRightSide());
-                matchingPairRepository.save(matchingPair);
-            }
-        }
+        updateQuestionOptions(dto, question);
 
         return question.getId();
     }
@@ -69,18 +64,7 @@ public class QuestionService {
         optionRepository.deleteByQuestionId(questionId);
         matchingPairRepository.deleteByQuestionId(questionId);
 
-        if (dto.getOptions() != null) {
-            for (var oDto : dto.getOptions()) {
-                Option option = new Option(null, question, oDto.getOptionText(), oDto.getIsCorrect());
-                optionRepository.save(option);
-            }
-        }
-        if (dto.getMatchingPairs() != null) {
-            for (var mpDto : dto.getMatchingPairs()) {
-                MatchingPair matchingPair = new MatchingPair(null, question, mpDto.getLeftSide(), mpDto.getRightSide());
-                matchingPairRepository.save(matchingPair);
-            }
-        }
+        updateQuestionOptions(dto, question);
 
         return questionRepository.save(question).getId();
     }
@@ -100,5 +84,27 @@ public class QuestionService {
         }
 
         questionRepository.delete(question);
+    }
+
+    private void updateQuestionOptions(QuestionCreateDto dto, Question question) {
+        if (dto.getOptions() != null) {
+            for (var oDto : dto.getOptions()) {
+                Option option = new Option();
+                option.setQuestion(question);
+                option.setOptionText(oDto.getOptionText());
+                option.setCorrect(oDto.getIsCorrect());
+
+                optionRepository.save(option);
+            }
+        }
+        if (dto.getMatchingPairs() != null) {
+            for (var mpDto : dto.getMatchingPairs()) {
+                MatchingPair matchingPair = new MatchingPair();
+                matchingPair.setQuestion(question);
+                matchingPair.setLeftSide(mpDto.getLeftSide());
+                matchingPair.setRightSide(mpDto.getRightSide());
+                matchingPairRepository.save(matchingPair);
+            }
+        }
     }
 }

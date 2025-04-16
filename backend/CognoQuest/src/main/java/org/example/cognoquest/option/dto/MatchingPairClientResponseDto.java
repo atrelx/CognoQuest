@@ -1,4 +1,4 @@
-package org.example.cognoquest.question.dto;
+package org.example.cognoquest.option.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

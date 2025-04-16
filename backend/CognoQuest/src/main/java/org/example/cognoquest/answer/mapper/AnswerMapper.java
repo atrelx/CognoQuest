@@ -3,7 +3,7 @@ package org.example.cognoquest.answer.mapper;
 import org.example.cognoquest.answer.*;
 import org.example.cognoquest.answer.dto.*;
 import org.example.cognoquest.option.Option;
-import org.example.cognoquest.question.MatchingPair;
+import org.example.cognoquest.option.MatchingPair;
 import org.example.cognoquest.question.Question;
 import org.example.cognoquest.survey.SurveyAttempt;
 import org.example.cognoquest.survey.dto.SurveyAttemptResultDto;
@@ -11,7 +11,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
-import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface AnswerMapper {

@@ -7,12 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.UUID;
 
-public interface OptionRepository extends JpaRepository<Option, UUID> {
-    List<Option> findByQuestionIdAndIsCorrect(UUID id, boolean b);
-    List<Option> findByQuestionId(UUID id);
+public interface MatchingPairRepository extends JpaRepository<MatchingPair, UUID> {
+    List<MatchingPair> findByQuestionId(UUID id);
+
+    @Modifying
     void deleteByQuestionId(UUID questionId);
 
     @Modifying
-    @Query("DELETE FROM Option o WHERE o.question.id IN :questionIds")
+    @Query("DELETE FROM MatchingPair mp WHERE mp.question.id IN :questionIds")
     void deleteByQuestionIdIn(List<UUID> questionIds);
 }

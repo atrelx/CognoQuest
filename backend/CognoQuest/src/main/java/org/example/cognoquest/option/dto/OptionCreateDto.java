@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class OptionCreateDto {
+public class OptionCreateDto implements OptionData  {
     @NotBlank(message = "Option text cannot be blank")
     private String optionText;
     @NotNull(message = "isCorrect cannot be null")

@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.cognoquest.question.MatchingPair;
+import org.example.cognoquest.option.MatchingPair;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
@@ -36,5 +36,5 @@ public class AnswerMatching {
     private MatchingPair pair;
 
     @Column(name = "selected_right_side", length = Integer.MAX_VALUE)
-    private String selectedRightSide; // Выбранный пользователем правый элемент
+    private String selectedRightSide;
 }

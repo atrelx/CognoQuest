@@ -1,4 +1,4 @@
-package org.example.cognoquest.question;
+package org.example.cognoquest.option;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -6,8 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.cognoquest.answer.AnswerMatching;
+import org.example.cognoquest.question.Question;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -35,4 +38,7 @@ public class MatchingPair {
     @NotNull
     @Column(name = "right_side", nullable = false, length = Integer.MAX_VALUE)
     private String rightSide;
+
+    @OneToMany(mappedBy = "pair", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<AnswerMatching> answers;
 }

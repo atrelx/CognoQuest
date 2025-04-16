@@ -9,6 +9,7 @@ import org.example.cognoquest.survey.SurveyAttempt;
 import org.example.cognoquest.question.Question;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -34,4 +35,13 @@ public class Answer {
 
     @Column(name = "is_correct")
     private Boolean isCorrect;
+
+    @OneToMany(mappedBy = "answer", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AnswerOption> answerOptions;
+
+    @OneToMany(mappedBy = "answer", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AnswerMatching> answerMatchings;
+
+    @OneToMany(mappedBy = "answer", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AnswerText> answerTexts;
 }

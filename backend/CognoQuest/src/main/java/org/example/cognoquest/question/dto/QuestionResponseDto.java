@@ -1,6 +1,7 @@
 package org.example.cognoquest.question.dto;
 
 import lombok.Data;
+import org.example.cognoquest.option.dto.MatchingPairCreateDto;
 import org.example.cognoquest.option.dto.OptionCreateDto;
 import org.example.cognoquest.question.QuestionType;
 

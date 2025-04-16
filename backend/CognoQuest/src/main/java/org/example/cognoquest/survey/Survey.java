@@ -47,6 +47,9 @@ public class Survey {
     @Column(name = "end_date", nullable = false)
     private OffsetDateTime endDate;
 
-    @OneToMany(mappedBy = "survey", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "survey", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Question> questions;
+
+    @OneToMany(mappedBy = "survey", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<SurveyAttempt> attempts;
 }

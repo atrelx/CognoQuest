@@ -67,8 +67,10 @@ public class SurveyController {
     }
 
     @PutMapping("/{surveyId}")
-    public ResponseEntity<UUID> updateSurvey(@PathVariable UUID surveyId,
-                                             @Valid @RequestBody SurveyCreateDto dto) {
+    public ResponseEntity<UUID> updateSurvey(
+            @PathVariable UUID surveyId,
+            @Valid @RequestBody SurveyEditDto dto
+    ) {
         String userId = getCurrentUserId();
         UUID updatedSurveyId = surveyService.updateSurvey(surveyId, dto, userId);
         return ResponseEntity.ok(updatedSurveyId);

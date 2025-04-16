@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.cognoquest.option.MatchingPair;
+import org.example.cognoquest.option.Option;
 import org.example.cognoquest.survey.Survey;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -14,6 +16,7 @@ import org.hibernate.annotations.ColumnDefault;
   For SingleOption, MultipleOption, TextInput questions
  */
 
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -45,4 +48,10 @@ public class Question {
 
     @Column(name = "correct_text_answer")
     private String correctTextAnswer; // Для TextInput
+
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Option> options;
+
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<MatchingPair> matchingPairs;
 }
