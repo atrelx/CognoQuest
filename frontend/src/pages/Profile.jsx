@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import api from "../services/ApiService.js";
 import useAuthStore from "../stores/Auth.js";
+import useToastStore from "../stores/useToastStore.js";
+import { toast } from "react-toastify";
 import defaultAvatar from '../assets/default-avatar.jpg';
 import Modal from '../components/Modal.jsx';
 import { FaPencilAlt } from 'react-icons/fa';
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
 
 function Profile() {
     const { user, setUser } = useAuthStore();
+    const { showToast } = useToastStore();
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [profileError, setProfileError] = useState(null);
     const [pictureError, setPictureError] = useState(null);
-    const [profileSuccess, setProfileSuccess] = useState(null);
-
     const [name, setName] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
     const fileInputRef = useRef(null);
@@ -22,7 +24,6 @@ function Profile() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoadingPassword, setIsLoadingPassword] = useState(false);
     const [passwordError, setPasswordError] = useState(null);
-    const [passwordSuccess, setPasswordSuccess] = useState(null);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
     const isOAuthUser = user?.oauthProvider != null && user.oauthProvider !== "";
@@ -49,7 +50,6 @@ function Profile() {
         setSelectedFile(null);
         setIsEditingProfile(true);
         setProfileError(null);
-        setProfileSuccess(null);
         setPictureError(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
@@ -57,7 +57,6 @@ function Profile() {
     const handleCancelEditProfile = () => {
         setIsEditingProfile(false);
         setProfileError(null);
-        setProfileSuccess(null);
         setPictureError(null);
         setSelectedFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -93,8 +92,8 @@ function Profile() {
 
         setIsLoadingProfile(true);
         setProfileError(null);
-        setProfileSuccess(null);
-        setPictureError(null);
+        const toastId = toast.loading("Updating profile...");
+
         const formData = new FormData();
         formData.append('name', name);
         if (pictureChanged) {
@@ -107,9 +106,17 @@ function Profile() {
             setSelectedFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
             setIsEditingProfile(false);
-            setProfileSuccess("Profile updated successfully!");
+            toast.dismiss(toastId);
+            showToast("Profile updated successfully!", "success");
         } catch (err) {
             console.error("Profile update error:", err);
+            toast.update(toastId, {
+                render: err.response?.data?.message || "Failed to update profile.",
+                type: "error",
+                isLoading: false,
+                autoClose: 5000,
+                closeButton: true
+            });
             setProfileError(err.response?.data?.message || "Failed to update profile.");
             setSelectedFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -128,17 +135,28 @@ function Profile() {
             setPasswordError("Please fill in all password fields.");
             return;
         }
+
         setIsLoadingPassword(true);
         setPasswordError(null);
-        setPasswordSuccess(null);
+        const toastId = toast.loading("Changing password...");
+
         try {
             await api.put("/users/me/password", { oldPassword: currentPassword, newPassword });
-            setPasswordSuccess("Password changed successfully! You can now close this window.");
+            toast.dismiss(toastId);
+            showToast("Password changed successfully!", "success");
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
+            setIsPasswordModalOpen(false);
         } catch (err) {
             console.error("Password change error:", err);
+            toast.update(toastId, {
+                render: err.response?.data?.message || "Failed to change password.",
+                type: "error",
+                isLoading: false,
+                autoClose: 5000,
+                closeButton: true
+            });
             setPasswordError(err.response?.data?.message || "Failed to change password.");
         } finally {
             setIsLoadingPassword(false);
@@ -148,7 +166,6 @@ function Profile() {
     const closePasswordModal = () => {
         setIsPasswordModalOpen(false);
         setPasswordError(null);
-        setPasswordSuccess(null);
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -175,6 +192,7 @@ function Profile() {
                                     onClick={() => fileInputRef.current?.click()}
                                     className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition opacity-75 group-hover:opacity-100"
                                     title="Change profile picture"
+                                    disabled={isLoadingProfile}
                                 >
                                     <FaPencilAlt size={16} />
                                 </button>
@@ -186,13 +204,10 @@ function Profile() {
                             onChange={handleFileChange}
                             ref={fileInputRef}
                             style={{ display: 'none' }}
-                            disabled={!isEditingProfile}
+                            disabled={!isEditingProfile || isLoadingProfile}
                         />
                         {isEditingProfile && pictureError && (
                             <p className="text-red-500 text-xs mt-2 text-center">{pictureError}</p>
-                        )}
-                        {profileSuccess && !isEditingProfile && (
-                            <p className="text-green-600 text-sm mt-2 text-center">{profileSuccess}</p>
                         )}
                     </div>
 
@@ -203,6 +218,7 @@ function Profile() {
                                 <button
                                     onClick={handleEditClick}
                                     className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
+                                    disabled={isLoadingProfile}
                                 >
                                     Edit Profile
                                 </button>
@@ -253,7 +269,7 @@ function Profile() {
                                         className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                                         disabled={isLoadingProfile || (!selectedFile && name === user?.name)}
                                     >
-                                        {isLoadingProfile ? "Saving..." : "Save"}
+                                        {isLoadingProfile ? <LoadingSpinner /> : "Save"}
                                     </button>
                                 </div>
                             )}
@@ -263,6 +279,7 @@ function Profile() {
                                 <button
                                     onClick={() => setIsPasswordModalOpen(true)}
                                     className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition duration-200"
+                                    disabled={isLoadingProfile}
                                 >
                                     Change Password
                                 </button>
@@ -272,87 +289,72 @@ function Profile() {
                 </div>
             </div>
             <Modal isOpen={isPasswordModalOpen} onClose={closePasswordModal} title="Change Your Password">
-                {passwordSuccess && (
-                    <p className="text-green-600 text-sm mb-3 text-center">{passwordSuccess}</p>
-                )}
                 {passwordError && <p className="text-red-500 text-sm mb-3 text-center">{passwordError}</p>}
-                {!passwordSuccess && (
-                    <form onSubmit={handleChangePassword} className="space-y-4 text-gray-900">
-                        <div>
-                            <label
-                                htmlFor="modalCurrentPassword"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Current Password
-                            </label>
-                            <input
-                                id="modalCurrentPassword"
-                                type="password"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                placeholder="Enter current password"
-                                className="w-full p-2 border border-gray-300 rounded shadow-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                                required
-                                disabled={isLoadingPassword}
-                            />
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="modalNewPassword"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                New Password
-                            </label>
-                            <input
-                                id="modalNewPassword"
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Enter new password"
-                                className="w-full p-2 border border-gray-300 rounded shadow-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                                required
-                                disabled={isLoadingPassword}
-                            />
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="modalConfirmPassword"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
-                                Confirm New Password
-                            </label>
-                            <input
-                                id="modalConfirmPassword"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="Confirm new password"
-                                className="w-full p-2 border border-gray-300 rounded shadow-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                                required
-                                disabled={isLoadingPassword}
-                            />
-                        </div>
-                        <div className="flex justify-end pt-2">
-                            <button
-                                type="submit"
-                                className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-200 disabled:opacity-50"
-                                disabled={isLoadingPassword}
-                            >
-                                {isLoadingPassword ? "Changing..." : "Confirm Change Password"}
-                            </button>
-                        </div>
-                    </form>
-                )}
-                {passwordSuccess && (
-                    <div className="text-right mt-4">
-                        <button
-                            onClick={closePasswordModal}
-                            className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+                <form onSubmit={handleChangePassword} className="space-y-4 text-gray-900">
+                    <div>
+                        <label
+                            htmlFor="modalCurrentPassword"
+                            className="block text-sm font-medium text-gray-700 mb-1"
                         >
-                            Close
+                            Current Password
+                        </label>
+                        <input
+                            id="modalCurrentPassword"
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="Enter current password"
+                            className="w-full p-2 border border-gray-300 rounded shadow-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                            required
+                            disabled={isLoadingPassword}
+                        />
+                    </div>
+                    <div>
+                        <label
+                            htmlFor="modalNewPassword"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            New Password
+                        </label>
+                        <input
+                            id="modalNewPassword"
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Enter new password"
+                            className="w-full p-2 border border-gray-300 rounded shadow-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                            required
+                            disabled={isLoadingPassword}
+                        />
+                    </div>
+                    <div>
+                        <label
+                            htmlFor="modalConfirmPassword"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Confirm New Password
+                        </label>
+                        <input
+                            id="modalConfirmPassword"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
+                            className="w-full p-2 border border-gray-300 rounded shadow-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                            required
+                            disabled={isLoadingPassword}
+                        />
+                    </div>
+                    <div className="flex justify-end pt-2">
+                        <button
+                            type="submit"
+                            className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-200 disabled:opacity-50"
+                            disabled={isLoadingPassword}
+                        >
+                            {isLoadingPassword ? <LoadingSpinner /> : "Confirm Change Password"}
                         </button>
                     </div>
-                )}
+                </form>
             </Modal>
         </div>
     );

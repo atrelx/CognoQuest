@@ -13,6 +13,7 @@ import SurveyResult from "./pages/SurveyResult";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import useAuthStore from "./stores/Auth.js";
+import {ToastContainer} from "react-toastify";
 
 function App() {
     const { isAuthenticated, checkAuth } = useAuthStore();
@@ -100,6 +101,18 @@ function App() {
                     />
                     <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
                 </Routes>
+                <ToastContainer
+                    position="bottom-left"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                />
             </div>
         </div>
     );

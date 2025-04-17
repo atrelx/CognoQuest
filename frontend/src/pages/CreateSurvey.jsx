@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/ApiService.js";
 import { FaTrashAlt } from 'react-icons/fa';
+import { toast } from "react-toastify";
+import useToastStore from "../stores/useToastStore.js";
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
 
 function CreateSurvey() {
-    // --- State ---
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -14,13 +16,13 @@ function CreateSurvey() {
         return d.toISOString().split('T')[0];
     });
     const [questions, setQuestions] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [submitError, setSubmitError] = useState(null);
     const [validationErrors, setValidationErrors] = useState({ title: null, questions: {}, noQuestionsError: false });
 
     const navigate = useNavigate();
+    const { showToast } = useToastStore();
 
-    // --- Helper functions ---
     const handleTitleChange = (e) => {
         setTitle(e.target.value);
         if (validationErrors.title) {
@@ -56,12 +58,13 @@ function CreateSurvey() {
         setQuestions(prev => prev.map(q =>
             q.tempId === tempId ? { ...q, [field]: value } : q
         ));
-
         if (validationErrors.questions[tempId]?.[field === 'questionText' ? 'text' : 'answer']) {
             setValidationErrors(prev => {
                 const qErrors = { ...prev.questions[tempId] };
                 delete qErrors[field === 'questionText' ? 'text' : 'answer'];
-                return { ...prev, questions: { ...prev.questions, [tempId]: qErrors } };
+                const updatedQuestions = { ...prev.questions, [tempId]: qErrors };
+                if (Object.keys(qErrors).length === 0) delete updatedQuestions[tempId];
+                return { ...prev, questions: updatedQuestions };
             });
         }
     };
@@ -107,7 +110,6 @@ function CreateSurvey() {
         setQuestions(prev => prev.map(q => {
             if (q.tempId === qTempId) {
                 let newOptions = [...q.options];
-
                 if (field === "isCorrect") {
                     if (q.type === "SingleChoice") {
                         newOptions = newOptions.map(opt => ({
@@ -124,7 +126,6 @@ function CreateSurvey() {
                         opt.tempId === oTempId ? { ...opt, [field]: value } : opt
                     );
                 }
-
                 return { ...q, options: newOptions };
             }
             return q;
@@ -185,12 +186,10 @@ function CreateSurvey() {
 
         questions.forEach(q => {
             const qErrors = {};
-
             if (!q.questionText.trim()) {
                 qErrors.text = 'Question text cannot be empty.';
                 isValid = false;
             }
-
             switch (q.type) {
                 case 'SingleChoice':
                 case 'MultipleChoice':
@@ -223,7 +222,6 @@ function CreateSurvey() {
                 default:
                     break;
             }
-
             if (Object.keys(qErrors).length > 0) {
                 errors.questions[q.tempId] = qErrors;
             }
@@ -238,13 +236,11 @@ function CreateSurvey() {
 
         const { isValid, errors } = validateForm();
         setValidationErrors(errors);
-
         if (!isValid) {
-            console.log("Validation failed:", errors);
             return;
         }
 
-        setIsLoading(true);
+        setIsSaving(true);
 
         const questionsToSend = questions.map(({ tempId, id, ...rest }) => ({
             ...rest,
@@ -261,15 +257,21 @@ function CreateSurvey() {
                 questions: questionsToSend
             };
 
-            console.log("Submitting survey data:", JSON.stringify(surveyData, null, 2));
             await api.post("/surveys", surveyData);
-            navigate(`/my-surveys`);
-
+            toast.dismiss(toastId);
+            showToast("Survey created successfully!", "success");
+            navigate("/");
         } catch (err) {
-            console.error(err);
+            toast.update(toastId, {
+                render: err.response?.data?.message || "Failed to create survey.",
+                type: "error",
+                isLoading: false,
+                autoClose: 5000,
+                closeButton: true
+            });
             setSubmitError(err.response?.data?.message || "Failed to create survey.");
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
     };
 
@@ -284,7 +286,6 @@ function CreateSurvey() {
             )}
 
             <form onSubmit={handleSubmit}>
-                {/* Title with validation */}
                 <div className="mb-4">
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                     <input
@@ -295,11 +296,11 @@ function CreateSurvey() {
                         placeholder="Enter survey title"
                         className={`w-full p-2 border rounded shadow-sm ${validationErrors.title ? 'border-red-500' : 'border-gray-300'}`}
                         required
+                        disabled={isSaving}
                     />
                     {validationErrors.title && <p className="text-red-500 text-xs mt-1">{validationErrors.title}</p>}
                 </div>
 
-                {/* Description */}
                 <div className="mb-4">
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea
@@ -309,10 +310,10 @@ function CreateSurvey() {
                         placeholder="Enter survey description (optional)"
                         rows="3"
                         className="w-full p-2 border border-gray-300 rounded shadow-sm"
+                        disabled={isSaving}
                     />
                 </div>
 
-                {/* Dates */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
@@ -322,6 +323,7 @@ function CreateSurvey() {
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             className="w-full p-2 border border-gray-300 rounded shadow-sm"
+                            disabled={isSaving}
                         />
                     </div>
                     <div>
@@ -332,11 +334,11 @@ function CreateSurvey() {
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             className="w-full p-2 border border-gray-300 rounded shadow-sm"
+                            disabled={isSaving}
                         />
                     </div>
                 </div>
 
-                {/* Questions Section */}
                 <div className={`mb-6 border-t pt-6 rounded-md ${validationErrors.noQuestionsError ? 'border-2 border-dashed border-red-400 p-4 bg-red-50' : ''}`}>
                     <h2 className="text-xl font-semibold mb-3">Questions</h2>
                     {validationErrors.noQuestionsError && (
@@ -345,19 +347,16 @@ function CreateSurvey() {
                         </p>
                     )}
 
-                    {/* Add Question Buttons */}
                     <div className="flex flex-wrap gap-2 mb-4">
-                        <button type="button" onClick={() => addQuestion("SingleChoice")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">Add Single Choice</button>
-                        <button type="button" onClick={() => addQuestion("MultipleChoice")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">Add Multiple Choice</button>
-                        <button type="button" onClick={() => addQuestion("TextInput")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">Add Text Input</button>
-                        <button type="button" onClick={() => addQuestion("Matching")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">Add Matching</button>
+                        <button type="button" onClick={() => addQuestion("SingleChoice")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600" disabled={isSaving}>Add Single Choice</button>
+                        <button type="button" onClick={() => addQuestion("MultipleChoice")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600" disabled={isSaving}>Add Multiple Choice</button>
+                        <button type="button" onClick={() => addQuestion("TextInput")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600" disabled={isSaving}>Add Text Input</button>
+                        <button type="button" onClick={() => addQuestion("Matching")} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600" disabled={isSaving}>Add Matching</button>
                     </div>
                 </div>
 
-                {/* Question List */}
                 {questions.map((q) => {
                     const qErrors = validationErrors.questions[q.tempId] || {};
-
                     return (
                         <div
                             key={q.tempId}
@@ -368,13 +367,14 @@ function CreateSurvey() {
                                 onClick={() => removeQuestion(q.tempId)}
                                 className="absolute top-2 right-2 p-1 text-red-500 hover:text-red-700"
                                 title="Remove question"
+                                disabled={isSaving}
                             >
                                 <FaTrashAlt />
                             </button>
 
                             <span className="text-xs font-semibold uppercase text-gray-500 mb-2 block">
-              {q.type.replace(/([A-Z])/g, ' $1').trim()}
-            </span>
+                {q.type.replace(/([A-Z])/g, ' $1').trim()}
+              </span>
 
                             <input
                                 type="text"
@@ -383,11 +383,11 @@ function CreateSurvey() {
                                 placeholder="Question Text"
                                 className={`w-full p-2 mb-1 border rounded ${qErrors.text ? 'border-red-400' : 'border-gray-300'}`}
                                 required
+                                disabled={isSaving}
                             />
                             {qErrors.text && <p className="text-red-500 text-xs mb-2">{qErrors.text}</p>}
                             {qErrors.answer && <p className="text-red-500 text-xs mb-2">{qErrors.answer}</p>}
 
-                            {/* Options (Single / Multiple Choice) */}
                             {(q.type === "SingleChoice" || q.type === "MultipleChoice") && (
                                 <div className="pl-4 border-l-2 border-blue-200 ml-2 mb-3 mt-2 space-y-2">
                                     {q.options.map((opt) => (
@@ -398,6 +398,7 @@ function CreateSurvey() {
                                                 checked={opt.isCorrect}
                                                 onChange={(e) => updateOption(q.tempId, opt.tempId, "isCorrect", e.target.checked)}
                                                 className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                disabled={isSaving}
                                             />
                                             <input
                                                 type="text"
@@ -406,12 +407,14 @@ function CreateSurvey() {
                                                 placeholder="Option Text"
                                                 className={`flex-grow p-2 border rounded ${!opt.optionText.trim() && qErrors.answer ? 'border-red-400' : 'border-gray-300'}`}
                                                 required
+                                                disabled={isSaving}
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => removeOption(q.tempId, opt.tempId)}
                                                 className="ml-2 p-1 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 title="Remove option"
+                                                disabled={isSaving}
                                             >
                                                 <FaTrashAlt size={12} />
                                             </button>
@@ -421,13 +424,13 @@ function CreateSurvey() {
                                         type="button"
                                         onClick={() => addOption(q.tempId)}
                                         className="p-2 text-sm bg-green-500 text-white rounded hover:bg-green-600 mt-2"
+                                        disabled={isSaving}
                                     >
                                         Add Option
                                     </button>
                                 </div>
                             )}
 
-                            {/* Text Input */}
                             {q.type === "TextInput" && (
                                 <input
                                     type="text"
@@ -436,10 +439,10 @@ function CreateSurvey() {
                                     placeholder="Correct Answer (Case-insensitive)"
                                     className={`w-full p-2 border rounded mt-2 ${qErrors.answer ? 'border-red-400' : 'border-gray-300'}`}
                                     required
+                                    disabled={isSaving}
                                 />
                             )}
 
-                            {/* Matching */}
                             {q.type === "Matching" && (
                                 <div className="pl-4 border-l-2 border-yellow-200 ml-2 mb-3 mt-2 space-y-2">
                                     {q.matchingPairs.map((pair) => (
@@ -451,6 +454,7 @@ function CreateSurvey() {
                                                 placeholder="Left Side"
                                                 className={`w-1/2 p-2 border rounded mr-2 ${!pair.leftSide.trim() && qErrors.answer ? 'border-red-400' : 'border-gray-300'}`}
                                                 required
+                                                disabled={isSaving}
                                             />
                                             <input
                                                 type="text"
@@ -459,12 +463,14 @@ function CreateSurvey() {
                                                 placeholder="Matching Right Side"
                                                 className={`w-1/2 p-2 border rounded ${!pair.rightSide.trim() && qErrors.answer ? 'border-red-400' : 'border-gray-300'}`}
                                                 required
+                                                disabled={isSaving}
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => removeMatchingPair(q.tempId, pair.tempId)}
                                                 className="ml-2 p-1 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 title="Remove pair"
+                                                disabled={isSaving}
                                             >
                                                 <FaTrashAlt size={12} />
                                             </button>
@@ -474,6 +480,7 @@ function CreateSurvey() {
                                         type="button"
                                         onClick={() => addMatchingPair(q.tempId)}
                                         className="p-2 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 mt-2"
+                                        disabled={isSaving}
                                     >
                                         Add Pair
                                     </button>
@@ -483,16 +490,26 @@ function CreateSurvey() {
                     );
                 })}
 
-                {/* Submit Button */}
-                <button
-                    type="submit"
-                    className="w-full p-3 mt-6 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition duration-200 disabled:opacity-50"
-                    disabled={isLoading}
-                >
-                    {isLoading ? 'Creating Survey...' : 'Create Survey'}
-                </button>
+                <div className="flex justify-end space-x-3 mt-6 border-t pt-6">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/my-surveys')}
+                        className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+                        disabled={isSaving}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
+                        disabled={isSaving}
+                    >
+                        {isSaving ? <LoadingSpinner /> : "Create Survey"}
+                    </button>
+                </div>
             </form>
         </div>
     );
 }
+
 export default CreateSurvey;
