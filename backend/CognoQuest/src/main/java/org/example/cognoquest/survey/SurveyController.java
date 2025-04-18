@@ -31,7 +31,7 @@ public class SurveyController {
     @GetMapping
     public ResponseEntity<Page<SurveyListDto>> getSurveys(
             @RequestParam(required = false) String title,
-            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(page = 0, size = 5, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         Page<SurveyListDto> surveysPage = surveyService.getAllSurveys(title, pageable);
         return ResponseEntity.ok(surveysPage);

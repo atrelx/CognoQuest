@@ -258,7 +258,6 @@ function CreateSurvey() {
             };
 
             await api.post("/surveys", surveyData);
-            toast.dismiss(toastId);
             showToast("Survey created successfully!", "success");
             navigate("/");
         } catch (err) {
@@ -493,7 +492,7 @@ function CreateSurvey() {
                 <div className="flex justify-end space-x-3 mt-6 border-t pt-6">
                     <button
                         type="button"
-                        onClick={() => navigate('/my-surveys')}
+                        onClick={() => navigate('/')}
                         className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition"
                         disabled={isSaving}
                     >

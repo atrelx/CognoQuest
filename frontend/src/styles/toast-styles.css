@@ -1,0 +1,30 @@
+.Toastify__toast {
+    font-size: 16px !important;
+    padding: 16px !important;
+    min-height: 70px !important;
+    max-width: 400px !important;
+}
+
+/* Theme-aware styling */
+.Toastify__toast--success {
+    background-color: var(--color-secondary) !important;
+    color: white !important;
+}
+
+.Toastify__toast--error {
+    background-color: var(--color-error) !important;
+}
+
+html.dark .Toastify__toast {
+    background-color: var(--color-surface) !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--color-border);
+}
+
+html.dark .Toastify__close-button {
+    color: var(--color-secondary) !important;
+}
+
+html.dark .Toastify__progress-bar {
+    background-color: var(--color-primary) !important;
+}

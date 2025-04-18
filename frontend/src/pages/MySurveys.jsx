@@ -3,14 +3,16 @@ import { Link } from "react-router-dom";
 import api from "../services/ApiService.js";
 import { useDebounce } from "../hooks/useDebounce.js";
 import MySurveyListItem from '../components/MySurveyListItem.jsx';
+import useToastStore from "../stores/useToastStore.js";
 import Pagination from '../components/Pagination.jsx';
 import Modal from '../components/Modal.jsx';
+import {toast} from "react-toastify";
 
 function MySurveys() {
     const [surveys, setSurveys] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(5);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortOption, setSortOption] = useState("title,asc");
     const [loading, setLoading] = useState(true);
@@ -19,6 +21,7 @@ function MySurveys() {
     const [surveyToDelete, setSurveyToDelete] = useState({id: null, title: ''});
     const [isDeleting, setIsDeleting] = useState(false);
     const debouncedSearchQuery = useDebounce(searchQuery, 500);
+    const { showToast, toast: toastData, clearToast } = useToastStore();
 
     const fetchSurveysPage = useCallback(
         async (page, size, title, sort) => {
@@ -61,7 +64,6 @@ function MySurveys() {
         if (currentPage !== 0) {
             setCurrentPage(0);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedSearchQuery, sortOption]);
 
     const handlePageChange = (newPage) => {
@@ -86,6 +88,7 @@ function MySurveys() {
     const cancelDelete = () => {
         setShowDeleteConfirm(false);
         setSurveyToDelete({id: null, title: ""});
+        clearToast();
     };
 
     const confirmDelete = async () => {
@@ -93,54 +96,65 @@ function MySurveys() {
 
         setIsDeleting(true);
         setError(null);
+        clearToast();
 
         try {
             await api.delete(`/surveys/${surveyToDelete.id}`);
             setShowDeleteConfirm(false);
             setSurveyToDelete({id: null, title: ""});
             fetchSurveysPage(currentPage, pageSize, debouncedSearchQuery, sortOption);
+            toast.success(`Survey "${surveyToDelete.title}" deleted successfully`,{
+                autoClose: 3000,
+                closeButton: true,
+            });
         } catch (err) {
-            console.error("Error deleting survey:", err);
-            setError(err.response?.data?.message || "Failed to delete survey.");
+            const errorMessage = err.response?.data?.message || "Failed to delete survey";
+            showToast({
+                message: errorMessage,
+                type: "error",
+                autoClose: 5000,
+            });
             setShowDeleteConfirm(false);
         } finally {
             setIsDeleting(false);
         }
     };
 
-// --- Renderowanie ---
     return (
         <>
-            {/* Główny kontener strony */}
+            {/* Main container */}
             <div className="container mx-auto mt-10 p-4">
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                    <h1 className="text-3xl font-bold text-center sm:text-left">My Surveys</h1>
+                    <h1 className="text-3xl text-text dark:text-text-dark font-bold text-center sm:text-left">
+                        My Surveys
+                    </h1>
                     <Link
                         to="/create-survey"
-                        className="w-full sm:w-auto p-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 transition text-center"
+                        className="w-full sm:w-auto p-2 px-4 bg-primary dark:bg-primary-dark text-on-primary dark:text-on-primary-dark rounded shadow-xl hover:shadow-primary/50 dark:hover:shadow-primary-dark/50 transition text-center"
                     >
                         Create New Survey
                     </Link>
                 </div>
 
-                {/* Wyszukiwanie i Sortowanie */}
+                {/* Search/Sort */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                     <input
                         type="text"
                         placeholder="Search your surveys by title..."
                         value={searchQuery}
                         onChange={handleSearchChange}
-                        className="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                        className="flex-grow p-3 text-text dark:text-text-dark border-3 border-border dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-border shadow-sm"
                     />
-                    <div className="flex-shrink-0">
-                        <label htmlFor="sort-surveys" className="sr-only">
+                    <div className="flex-shrink-0 text-text dark:text-text-dark">
+                        <label htmlFor="sort-surveys"
+                               className="sr-only">
                             Sort by:
                         </label>
                         <select
                             id="sort-surveys"
                             value={sortOption}
                             onChange={handleSortChange}
-                            className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm h-full w-full sm:w-auto"
+                            className="p-3 bg-primary dark:bg-primary-dark text-text-dark font-1000 border-3 border-border dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-border shadow-sm h-full w-full sm:w-auto cursor-pointer hover:accent"
                         >
                             <option value="title,asc">Sort by: Title (A-Z)</option>
                             <option value="title,desc">Sort by: Title (Z-A)</option>
@@ -166,7 +180,7 @@ function MySurveys() {
                 {!loading && !error && (
                     <>
                         {surveys.length === 0 ? (
-                            <p className="text-center text-gray-500 py-10">
+                            <p className="text-center text-text dark:text-text-dark py-10">
                                 {searchQuery
                                     ? "No surveys match your search."
                                     : "You haven't created any surveys yet."}
@@ -191,7 +205,7 @@ function MySurveys() {
                 )}
             </div>
 
-            {/* Modal Potwierdzenia Usunięcia */}
+            {/* Delete modal */}
             <Modal
                 isOpen={showDeleteConfirm}
                 onClose={cancelDelete}
@@ -226,4 +240,4 @@ function MySurveys() {
     );
 }
 
-export default MySurveys;
+export default MySurveys

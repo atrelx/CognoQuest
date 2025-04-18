@@ -37,7 +37,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                         key={pageIndex}
                         onClick={() => onPageChange(pageIndex)}
                         disabled={currentPage === pageIndex}
-                        className={`px-3 py-1 rounded transition ${currentPage === pageIndex ? 'bg-blue-600 text-white cursor-default' : 'bg-white text-blue-600 border border-gray-300 hover:bg-blue-50'}`}
+                        className={`px-3 py-1 rounded transition ${currentPage === pageIndex ? 'bg-primary dark:bg-primary-dark text-text-dark cursor-default' : 'bg-white text-blue-600 border border-gray-300 hover:bg-blue-50'}`}
                         aria-current={currentPage === pageIndex ? 'page' : undefined}
                     >
                         {pageIndex + 1}
@@ -49,7 +49,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
             <button
                 onClick={handleNext}
                 disabled={currentPage >= totalPages - 1}
-                className={`px-3 py-1 rounded transition ${currentPage >= totalPages - 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                className={`px-3 py-1 rounded transition ${currentPage >= totalPages - 1 ? 'bg-gray-200 text-black cursor-not-allowed' : 'bg-gray-200 text-black hover:bg-white-300'}`}
                 aria-label="Next page"
             >
                 &gt;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import {useState, useEffect, useRef, useMemo} from "react";
 import api from "../services/ApiService.js";
 import useAuthStore from "../stores/Auth.js";
 import useToastStore from "../stores/useToastStore.js";
@@ -28,10 +28,11 @@ function Profile() {
 
     const isOAuthUser = user?.oauthProvider != null && user.oauthProvider !== "";
 
-    const getPictureUrl = (baseUrl) => {
-        if (!baseUrl) return defaultAvatar;
-        return `${baseUrl}?t=${new Date().getTime()}`;
-    };
+    const profilePictureUrl = useMemo(() => {
+        const baseUrl = user?.profilePicture;
+        console.log("Base URL:", baseUrl);
+        return baseUrl || defaultAvatar;
+    }, [user?.profilePicture]);
 
     useEffect(() => {
         if (user) {
@@ -181,7 +182,7 @@ function Profile() {
                     <div className="flex-shrink-0 flex flex-col items-center w-full md:w-auto">
                         <div className="relative group mb-2">
                             <img
-                                src={selectedFile ? URL.createObjectURL(selectedFile) : getPictureUrl(user?.profilePicture)}
+                                src={selectedFile ? URL.createObjectURL(selectedFile) : profilePictureUrl}
                                 alt="Profile"
                                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-gray-200 object-cover shadow-lg ${isEditingProfile ? 'cursor-pointer group-hover:opacity-75 transition-opacity' : ''}`}
                                 onClick={() => isEditingProfile && fileInputRef.current?.click()}
