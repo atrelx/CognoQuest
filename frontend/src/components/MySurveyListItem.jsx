@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaEdit, FaTrashAlt } from 'react-icons/fa'; // Ikony
+import { FaEdit, FaTrashAlt } from 'react-icons/fa';
 
 
 function MySurveyListItem({ survey, onDelete }) {

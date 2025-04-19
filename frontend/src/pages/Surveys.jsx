@@ -46,16 +46,27 @@ function Surveys() {
     return (
         <div className="container mx-auto mt-10 p-4">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <h1 className="text-3xl font-bold text-center sm:text-left">Available Surveys</h1>
-                <Link to="/create-survey" className="w-full sm:w-auto p-2 px-4 bg-green-600 text-white rounded hover:bg-green-700 transition text-center"> Create New Survey </Link>
+                <h1 className="text-3xl text-text dark:text-text-dark font-bold text-center sm:text-left">
+                    Available Surveys
+                </h1>
+                <Link to="/create-survey"
+                      className="w-full sm:w-auto p-2 px-7 bg-primary dark:bg-primary-dark text-on-primary dark:text-on-primary-dark rounded shadow-xl hover:shadow-primary/50 dark:hover:shadow-primary-dark/50 transition text-center">
+                    Create New Survey
+                </Link>
             </div>
 
             {/* Search/Sort */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <input type="text" placeholder="Search surveys by title..." value={searchQuery} onChange={handleSearchChange} className="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
+                <input type="text"
+                       placeholder="Search surveys by title..."
+                       value={searchQuery}
+                       onChange={handleSearchChange}
+                       className="flex-grow p-3 text-text dark:text-text-dark border-3 border-border dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-border shadow-sm" />
                 <div className="flex-shrink-0">
                     <label htmlFor="sort-surveys" className="sr-only">Sort by:</label>
-                    <select id="sort-surveys" value={sortOption} onChange={handleSortChange} className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm h-full w-full sm:w-auto" >
+                    <select id="sort-surveys" value={sortOption}
+                            onChange={handleSortChange}
+                            className="p-3 bg-primary dark:bg-primary-dark text-text-dark font-1000 border-3 border-border dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-border shadow-sm h-full w-full sm:w-auto cursor-pointer hover:accent" >
                         <option value="title,asc">Sort by: Title (A-Z)</option>
                         <option value="title,desc">Sort by: Title (Z-A)</option>
                         <option value="startDate,desc">Sort by: Newest First</option>

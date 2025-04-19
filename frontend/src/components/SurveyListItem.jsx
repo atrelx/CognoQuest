@@ -10,13 +10,13 @@ function SurveyListItem({ survey }) {
     }
 
     return (
-        <div className="p-5 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200">
-            <h2 className="text-xl font-semibold mb-2 text-blue-700">{title}</h2>
-            <p className="text-sm text-gray-500 mb-3">Created by: {createdByName}</p>
+        <div className="p-5 bg-secondary dark:bg-secondary-dark rounded-lg border-border dark:border-border-dark border-2 shadow-secondary dark:shadow-secondary-dark hover:shadow-xl transition-shadow duration-200">
+            <h2 className="text-h5 text-text dark:text-text-dark font-semibold mb-2">{title}</h2>
+            <p className="text-h6 text-text-secondary dark:text-text-secondary-dark">Created by: {createdByName}</p>
             <p className="text-gray-700 mb-4 line-clamp-3">{description}</p>
             <Link
                 to={`/survey/${id}`}
-                className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition duration-200"
+                className="inline-block px-6 py-2 bg-primary dark:bg-primary-dark hover:bg-primary/80 dark:hover:bg-primary-dark/80 text-on-primary dark:text-on-primary-dark text-h6 font-medium rounded transition duration-200"
             >
                 Take Survey
             </Link>

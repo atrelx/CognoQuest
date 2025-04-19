@@ -130,7 +130,7 @@ function MySurveys() {
                     </h1>
                     <Link
                         to="/create-survey"
-                        className="w-full sm:w-auto p-2 px-4 bg-primary dark:bg-primary-dark text-on-primary dark:text-on-primary-dark rounded shadow-xl hover:shadow-primary/50 dark:hover:shadow-primary-dark/50 transition text-center"
+                        className="w-full sm:w-auto p-2 px-7 bg-primary dark:bg-primary-dark text-on-primary dark:text-on-primary-dark rounded shadow-xl hover:shadow-primary/50 dark:hover:shadow-primary-dark/50 transition text-center"
                     >
                         Create New Survey
                     </Link>
@@ -154,7 +154,7 @@ function MySurveys() {
                             id="sort-surveys"
                             value={sortOption}
                             onChange={handleSortChange}
-                            className="p-3 bg-primary dark:bg-primary-dark text-text-dark font-1000 border-3 border-border dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-border shadow-sm h-full w-full sm:w-auto cursor-pointer hover:accent"
+                            className="p-3 bg-primary dark:bg-primary-dark text-text-dark font-1000 border-3 border-border dark:border-border-dark rounded-lg focus:outline-none focus:ring-1 focus:ring-border shadow-sm h-full w-full sm:w-auto cursor-pointer hover:accent"
                         >
                             <option value="title,asc">Sort by: Title (A-Z)</option>
                             <option value="title,desc">Sort by: Title (Z-A)</option>
