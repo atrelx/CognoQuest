@@ -276,7 +276,7 @@ function CreateSurvey() {
 
     return (
         <div className="max-w-3xl mx-auto mt-10 mb-10 p-6 bg-secondary dark:bg-secondary-dark rounded-lg shadow-md">
-            <h1 className="text-3xl text-text dark:text-text-dark font-bold text-center mb-6">
+            <h1 className="text-3xl text-text/70 dark:text-text-dark font-bold text-center mb-6">
                 Create New Survey
             </h1>
 
@@ -353,7 +353,7 @@ function CreateSurvey() {
                 </div>
 
                 <div
-                    className={`mb-6 border-t border-t-2 border-border dark:border-border-dark pt-6 ${validationErrors.noQuestionsError ? 'border-2 rounded-md border-t-2 border-dashed border-error p-4 bg-error/60' : ''}`}>
+                    className={`mb-6 border-t border-t-2 border-border dark:border-border-dark pt-6 ${validationErrors.noQuestionsError ? 'border-1 rounded-md border-t-2 border-dashed border-error p-4 bg-error/60' : ''}`}>
                     <h2 className="text-xl font-semibold text-text dark:text-text-dark mb-3">Questions</h2>
                     {validationErrors.noQuestionsError && (
                         <p className="text-red-600 text-sm mb-3 font-medium">
@@ -407,7 +407,7 @@ function CreateSurvey() {
                                 value={q.questionText}
                                 onChange={(e) => updateQuestion(q.tempId, "questionText", e.target.value)}
                                 placeholder="Question Text"
-                                className={`w-full p-2 mb-1 text-text dark:text-text-dark border-2 border-border dark:border-border-dark shadow-sm focus:outline-none focus:ring-1 rounded ${qErrors.text ? 'border-error dark:border-error-dark' : 'border-border dark:border-border-dark'}`}
+                                className={`w-full p-2 mb-1 text-text dark:text-text-dark border-1 border-border dark:border-border-dark shadow-sm focus:outline-none focus:ring-1 rounded ${qErrors.text ? 'border-error dark:border-error-dark' : 'border-border dark:border-border-dark'}`}
                                 required
                                 disabled={isSaving}
                             />
@@ -431,7 +431,7 @@ function CreateSurvey() {
                                                 value={opt.optionText}
                                                 onChange={(e) => updateOption(q.tempId, opt.tempId, "optionText", e.target.value)}
                                                 placeholder="Option Text"
-                                                className={`flex-grow p-2 text-text dark:text-text-dark shadow-sm border-2 focus:outline-none focus:ring-1 rounded mr-2 ${!opt.optionText.trim() && qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
+                                                className={`flex-grow p-2 text-text dark:text-text-dark shadow-sm border-1 focus:outline-none focus:ring-1 rounded mr-2 ${!opt.optionText.trim() && qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
                                                 required
                                                 disabled={isSaving}
                                             />
@@ -449,7 +449,7 @@ function CreateSurvey() {
                                     <button
                                         type="button"
                                         onClick={() => addOption(q.tempId)}
-                                        className="p-2 text-sm bg-edit text-white rounded hover:bg-edit/80 cursor-pointer mt-2"
+                                        className="p-2 text-sm bg-primary/90 dark:bg-primary-dark/90 hover:bg-primary/80 dark:hover:bg-primary-dark-80 text-white rounded cursor-pointer mt-2"
                                         disabled={isSaving}
                                     >
                                         Add Option
@@ -463,7 +463,7 @@ function CreateSurvey() {
                                     value={q.correctTextAnswer || ''}
                                     onChange={(e) => updateQuestion(q.tempId, "correctTextAnswer", e.target.value)}
                                     placeholder="Correct Answer (Case-insensitive)"
-                                    className={`w-full p-2 mt-1 text-text dark:text-text-dark shadow-sm border-2 focus:outline-none focus:ring-1 rounded mr-2 ${qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
+                                    className={`w-full p-2 mt-1 text-text dark:text-text-dark shadow-sm border-1 focus:outline-none focus:ring-1 rounded mr-2 ${qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
                                     required
                                     disabled={isSaving}
                                 />
@@ -478,7 +478,7 @@ function CreateSurvey() {
                                                 value={pair.leftSide}
                                                 onChange={(e) => updateMatchingPair(q.tempId, pair.tempId, "leftSide", e.target.value)}
                                                 placeholder="Left Side"
-                                                className={`w-1/2 p-2 text-text dark:text-text-dark shadow-sm border-2 focus:outline-none focus:ring-1 rounded mr-2 ${!pair.leftSide.trim() && qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
+                                                className={`w-1/2 p-2 text-text dark:text-text-dark shadow-sm border-1 focus:outline-none focus:ring-1 rounded mr-2 ${!pair.leftSide.trim() && qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
                                                 required
                                                 disabled={isSaving}
                                             />
@@ -487,7 +487,7 @@ function CreateSurvey() {
                                                 value={pair.rightSide}
                                                 onChange={(e) => updateMatchingPair(q.tempId, pair.tempId, "rightSide", e.target.value)}
                                                 placeholder="Matching Right Side"
-                                                className={`w-1/2 p-2 text-text dark:text-text-dark border-2 shadow-sm focus:outline-none focus:ring-1 rounded ${!pair.rightSide.trim() && qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
+                                                className={`w-1/2 p-2 text-text dark:text-text-dark border-1 shadow-sm focus:outline-none focus:ring-1 rounded ${!pair.rightSide.trim() && qErrors.answer ? 'border-red-400' : 'border-border dark:border-border-dark'}`}
                                                 required
                                                 disabled={isSaving}
                                             />
@@ -505,7 +505,7 @@ function CreateSurvey() {
                                     <button
                                         type="button"
                                         onClick={() => addMatchingPair(q.tempId)}
-                                        className="p-2 px-4 text-sm bg-edit text-white rounded hover:bg-edit/80 cursor-pointer mt-2"
+                                        className="p-2 px-4 text-sm bg-primary/90 dark:bg-primary-dark/90 hover:bg-primary/80 dark:hover:bg-primary-dark-80 text-white rounded cursor-pointer mt-2"
                                         disabled={isSaving}
                                     >
                                         Add Pair
@@ -520,14 +520,14 @@ function CreateSurvey() {
                     <button
                         type="button"
                         onClick={() => navigate('/')}
-                        className="px-4 py-2 text-sm bg-delete text-white rounded hover:bg-delete/85 transition cursor-pointer"
+                        className="px-4 py-2 font-header bg-delete text-white hover:bg-delete/85 rounded transition cursor-pointer"
                         disabled={isSaving}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className="px-4 py-2 text-sm bg-primary dark:bg-primary-dark hover:bg-primary/85 dark:hover:bg-primary-dark/85 cursor-pointer text-text-dark rounded transition disabled:opacity-50"
+                        className="px-4 py-2 font-header bg-primary dark:bg-primary-dark hover:bg-primary/85 dark:hover:bg-primary-dark/85 cursor-pointer text-text-dark rounded transition disabled:opacity-50"
                         disabled={isSaving}
                     >
                         {isSaving ? <LoadingSpinner/> : "Create Survey"}

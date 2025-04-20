@@ -30,21 +30,19 @@ function SurveyResult() {
     if (!result) return <div className="text-center mt-10">Could not retrieve survey results.</div>;
 
     return (
-        <div className="max-w-2xl mx-auto mt-10 mb-10 p-8 bg-white rounded-lg shadow-xl">
-            <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+        <div className="max-w-2xl mx-auto mt-10 mb-10 p-8 bg-secondary dark:bg-secondary-dark rounded-lg shadow-xl">
+            <h1 className="text-3xl font-bold mb-6 text-center text-text dark:text-text-dark">
                 Survey Results: {result.title || 'Survey'}
             </h1>
 
             {result.userAttempt ? (
-                <div className="mb-6 p-5 border-2 border-blue-200 rounded-lg bg-blue-50 shadow">
-                    <h2 className="text-xl font-semibold mb-3 text-blue-800">Your Result</h2>
-                    <p className="text-lg text-gray-700">
-                        Score:
-                        <span className="font-bold text-blue-600 ml-2">
+                <div className="mb-6 p-5 border-2 border border-border dark:border-border-dark bg-secondary-container dark:bg-secondary-container-dark rounded-lg shadow">
+                    <h2 className="text-xl font-semibold mb-3 text-text dark:text-text-dark text-center">Your Result</h2>
+                    <p className="text-lg text-text dark:text-text-dark text-center">
+                        <span className="font-bold text-text dark:text-text-dark ml-2">
                             {result.userAttempt.score != null ? `${result.userAttempt.score.toFixed(1)}%` : 'Not scored yet'}
                         </span>
                     </p>
-                    { /* TODO: Add detailed answers display from result.userAttempt.answers */}
                 </div>
             ) : (
                 <p className="mb-6 p-4 border border-yellow-300 rounded bg-yellow-50 text-yellow-800 text-center">
@@ -52,18 +50,18 @@ function SurveyResult() {
                 </p>
             )}
 
-            <div className="p-5 border border-gray-200 rounded-lg bg-gray-50 shadow">
-                <h2 className="text-xl font-semibold mb-3 text-gray-700">Overall Statistics</h2>
+            <div className="p-5 border-2 border-border dark:border-border-dark bg-secondary-container dark:bg-secondary-container-dark rounded-lg shadow">
+                <h2 className="text-xl font-header mb-3 text-text dark:text-text-dark text-center">Overall Statistics</h2>
                 <div className="flex justify-around text-center">
                     <div>
-                        <p className="text-gray-600">Average Score</p>
-                        <p className="text-2xl font-bold text-gray-800">
+                        <p className="text-text dark:text-text-dark">Average Score</p>
+                        <p className="text-2xl font-bold text-text dark:text-text-dark">
                             {result.averageScore != null ? `${result.averageScore.toFixed(1)}%` : 'N/A'}
                         </p>
                     </div>
                     <div>
-                        <p className="text-gray-600">Total Completions</p>
-                        <p className="text-2xl font-bold text-gray-800">
+                        <p className="text-text dark:text-text-dark">Total Completions</p>
+                        <p className="text-2xl font-bold text-text dark:text-text-dark">
                             {result.completionCount ?? 0}
                         </p>
                     </div>
@@ -74,13 +72,13 @@ function SurveyResult() {
             <div className="mt-8 text-center space-x-4">
                 <Link
                     to="/surveys"
-                    className="inline-block px-5 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition duration-200 shadow"
+                    className="inline-block px-5 py-2 font-header bg-delete text-white hover:bg-delete/85 rounded-md transition duration-200 shadow"
                 >
                     Back to Surveys List
                 </Link>
                 <Link
                     to={`/survey/${id}`}
-                    className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 shadow"
+                    className="inline-block px-5 py-2 font-header bg-primary dark:bg-primary-dark hover:bg-primary/85 dark:hover:bg-primary-dark/85 cursor-pointer text-text-dark rounded transition disabled:opacity-50 rounded-mdtransition duration-200 shadow"
                 >
                     {result.userAttempt ? 'Retake Survey' : 'Take Survey'}
                 </Link>

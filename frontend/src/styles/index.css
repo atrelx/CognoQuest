@@ -52,19 +52,21 @@
    --color-background: #d5dbfd;
    --color-surface: #d0d4fa;
    --color-primary: #445bbf;
-   --color-secondary: #97a8ed;
+   --color-secondary: #acbffd;
+   --color-secondary-container: #bdc8fa;
    --color-accent: #5f76da;
    --color-border: #737aa6;
-   --color-error: #fb7185;
+   --color-error: #f6445d;
    --color-on-primary: #ffffff;
    --color-on-primary-secondary: #e1e1e1;
 
    --color-text-dark: #f4f6fa;
-   --color-text-secondary-dark: #c1c4d9;
+   --color-text-secondary-dark: #e0e3fd;
    --color-background-dark: #030407;
    --color-surface-dark: #121417;
    --color-primary-dark: #4056ba;
    --color-secondary-dark: #1e2c6b;
+   --color-secondary-container-dark: #5361c3;
    --color-accent-dark: #263ca1;
    --color-border-dark: #3c4470;
    --color-error-dark: #fda4af;

@@ -50,7 +50,7 @@ function Surveys() {
                     Available Surveys
                 </h1>
                 <Link to="/create-survey"
-                      className="w-full sm:w-auto p-2 px-7 bg-primary dark:bg-primary-dark text-on-primary dark:text-on-primary-dark rounded shadow-xl hover:shadow-primary/50 dark:hover:shadow-primary-dark/50 transition text-center">
+                      className="w-full font-header sm:w-auto p-2 px-7 bg-primary dark:bg-primary-dark text-on-primary dark:text-on-primary-dark rounded shadow-xl hover:shadow-primary/50 dark:hover:shadow-primary-dark/50 transition text-center">
                     Create New Survey
                 </Link>
             </div>
