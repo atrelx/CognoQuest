@@ -1,0 +1,9 @@
+.env
+frontend/.env
+backend/application.properties
+backend/firebase-service-account.json
+
+postgres-data/
+
+frontend/dist/
+backend/target/

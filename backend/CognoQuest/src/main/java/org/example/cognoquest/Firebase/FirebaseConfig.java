@@ -23,9 +23,15 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void init() throws IOException {
-        InputStream serviceAccount = new ClassPathResource(serviceAccountKeyPath
-                .replace("classpath:", ""))
-                .getInputStream();
+        InputStream serviceAccount;
+
+        // for local development check if the path starts with classpath:
+        if (serviceAccountKeyPath.startsWith("classpath:")) {
+            String resourcePath = serviceAccountKeyPath.replace("classpath:", "");
+            serviceAccount = new ClassPathResource(resourcePath).getInputStream();
+        } else {
+            serviceAccount = new FileInputStream(serviceAccountKeyPath);
+        }
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))

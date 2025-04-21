@@ -28,7 +28,7 @@ public class SecurityConfig {
                           CustomUserDetailsService customUserDetailsService,
                           CustomOAuth2UserService customOAuth2UserService,
                           OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
-                          @Value("${app.cors.allowed-origins}") String corsAllowedOrigins){
+                          @Value("${app.frontend-url}") String corsAllowedOrigins){
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customUserDetailsService = customUserDetailsService;
         this.customOAuth2UserService = customOAuth2UserService;
@@ -41,7 +41,7 @@ public class SecurityConfig {
         return http
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.setAllowedOrigins(List.of(corsAllowedOrigins));
+                    corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost", "http://localhost:80"));
                     corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(List.of("*"));
                     corsConfiguration.setAllowCredentials(true);
