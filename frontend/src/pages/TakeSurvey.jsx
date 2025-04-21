@@ -206,9 +206,6 @@ function TakeSurvey() {
             }
         }
 
-        if (!allAnswered && Object.keys(errors).length === 0) {
-        }
-
         return { isValid: Object.keys(errors).length === 0, errors };
     };
 

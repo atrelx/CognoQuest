@@ -1,0 +1,35 @@
+spring.application.name=CognoQuest
+
+# Database configuration
+spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/CognoQuest
+spring.datasource.username=${POSTGRES_USER}
+spring.datasource.password=${POSTGRES_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Hibernate configuration
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=true
+
+# Enable the JPA repositories
+spring.data.jpa.repositories.enabled=true
+
+# Server configurations
+app.base-url=${APP_BASE_URL:http://localhost:8080}
+app.frontend-url=${APP_FRONTEND_URL:http://localhost}
+
+# JWT configuration
+jwt.accessExpiration=900000
+jwt.refreshExpiration=604800000
+jwt.secret=${JWT_SECRET}
+
+# Google OAuth2
+spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID}
+spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET}
+spring.security.oauth2.client.registration.google.scope=openid,email,profile
+spring.security.oauth2.client.registration.google.redirect-uri=${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
+
+# Firebase Storage
+firebase.storage.bucket=${FIREBASE_STORAGE_BUCKET}
+firebase.service.account.key.path=${FIREBASE_KEY_PATH}

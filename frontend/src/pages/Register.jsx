@@ -11,14 +11,19 @@ function Register() {
     const navigate = useNavigate();
     const { login, isAuthenticated } = useAuthStore();
 
+    console.log("Base URL:", import.meta.env.VITE_API_URL);
+    console.log("Hello world");
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            console.log("Base URL:", import.meta.env.VITE_API_URL);
             const { data } = await api.post("/auth/register", { name, email, password });
             login(data.user);
             navigate("/");
         } catch (err) {
-            setError("Registration failed");
+            console.log("Request URL:", err.config.url);
+            setError("Registration failed: " + err);
         }
     };
 

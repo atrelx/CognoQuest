@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import logo from '../assets/logo.png';
 import useAuthStore from "../stores/Auth.js";
 import api from "../services/ApiService.js";
 import defaultAvatar from '../assets/default-avatar.jpg';
@@ -39,7 +40,7 @@ function Navbar() {
                 <div className="flex items-center space-x-10">
                     <Link to="/" className="flex items-center space-x-2 ml-5">
                         <img
-                            src="/src/assets/logo.png"
+                            src={logo}
                             alt="CognoQuest Logo"
                             className="w-14 h-14"
                         />
