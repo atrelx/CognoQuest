@@ -106,10 +106,11 @@ function TakeSurvey() {
 
             // Update the answer based on the question type
             switch (type) {
-                case "SingleChoice":
-                    newAnswers[questionId] = { ...currentAnswer, selectedOptionIds: [value] };
+                case "SingleChoice": {
+                    newAnswers[questionId] = {...currentAnswer, selectedOptionIds: [value]};
                     break;
-                case "MultipleChoice":
+                }
+                case "MultipleChoice": {
                     const currentSelection = currentAnswer.selectedOptionIds || [];
                     if (value) {
                         if (optionId && !currentSelection.includes(optionId)) {
@@ -125,10 +126,12 @@ function TakeSurvey() {
                         };
                     }
                     break;
-                case "TextInput":
+                }
+                case "TextInput": {
                     newAnswers[questionId] = { ...currentAnswer, textAnswer: value };
                     break;
-                case "Matching":
+                }
+                case "Matching": {
                     const currentMatching = currentAnswer.matchingAnswers || [];
                     let pairFound = false;
 
@@ -146,6 +149,7 @@ function TakeSurvey() {
 
                     newAnswers[questionId] = { ...currentAnswer, matchingAnswers: updatedMatching };
                     break;
+                }
                 default:
                     break;
             }
@@ -156,53 +160,37 @@ function TakeSurvey() {
 
     const validateAnswers = () => {
         const errors = {};
-        let allAnswered = true;
 
         if (!survey || !survey.questions) return { isValid: false, errors };
 
         for (const q of survey.questions) {
             const answerData = answers[q.id];
-            let questionAnswered = false;
 
             // validates answer based on question type
             switch (q.type) {
                 case 'SingleChoice':
                     if (!answerData || !answerData.selectedOptionIds || answerData.selectedOptionIds.length !== 1) {
                         errors[q.id] = "Please select one option.";
-                        allAnswered = false;
-                    } else {
-                        questionAnswered = true;
                     }
                     break;
                 case 'MultipleChoice':
                     if (!answerData || !answerData.selectedOptionIds || answerData.selectedOptionIds.length === 0) {
                         errors[q.id] = "Please select at least one option.";
-                        allAnswered = false;
-                    } else {
-                        questionAnswered = true;
                     }
                     break;
                 case 'TextInput':
-                    questionAnswered = answerData && typeof answerData.textAnswer === 'string';
-                    if (!questionAnswered) allAnswered = false;
                     break;
-                case 'Matching':
+                case 'Matching': {
                     const matchingAnswered = answerData && answerData.matchingAnswers &&
                         answerData.matchingAnswers.length === q.matchingPairs?.length &&
                         answerData.matchingAnswers.every(a => typeof a.selectedRightSide === 'string');
                     if (!matchingAnswered) {
                         errors[q.id] = "Please provide a match for every item.";
-                        allAnswered = false;
-                    } else {
-                        questionAnswered = true;
                     }
                     break;
+                }
                 default:
-                    allAnswered = false;
                     break;
-            }
-            if (errors[q.id]) {
-                allAnswered = false;
             }
         }
 

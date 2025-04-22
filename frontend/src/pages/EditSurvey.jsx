@@ -285,11 +285,25 @@ function EditSurvey() {
 
         setIsSaving(true);
 
-        const questionsToSend = questions.map(({ tempId, ...q }) => ({
-            ...q,
-            options: q.options?.map(({ tempId, ...o }) => o),
-            matchingPairs: q.matchingPairs?.map(({ tempId, ...p }) => p),
-        }));
+        const questionsToSend = questions.map(q => {
+            // Create a copy without tempId
+            const questionCopy = { ...q };
+            delete questionCopy.tempId;
+
+            return {
+                ...questionCopy,
+                options: q.options?.map(o => {
+                    const optionCopy = { ...o };
+                    delete optionCopy.tempId;
+                    return optionCopy;
+                }),
+                matchingPairs: q.matchingPairs?.map(p => {
+                    const pairCopy = { ...p };
+                    delete pairCopy.tempId;
+                    return pairCopy;
+                }),
+            };
+        });
 
         const surveyData = {
             title,

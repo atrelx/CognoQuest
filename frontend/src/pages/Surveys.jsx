@@ -9,7 +9,7 @@ function Surveys() {
     const [surveys, setSurveys] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize] = useState(5);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortOption, setSortOption] = useState("title,asc");
     const [loading, setLoading] = useState(true);

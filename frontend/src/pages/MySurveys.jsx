@@ -12,7 +12,7 @@ function MySurveys() {
     const [surveys, setSurveys] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [pageSize, setPageSize] = useState(5);
+    const [pageSize] = useState(5);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortOption, setSortOption] = useState("title,asc");
     const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ function MySurveys() {
     const [surveyToDelete, setSurveyToDelete] = useState({id: null, title: ''});
     const [isDeleting, setIsDeleting] = useState(false);
     const debouncedSearchQuery = useDebounce(searchQuery, 500);
-    const { showToast, toast: toastData, clearToast } = useToastStore();
+    const { showToast, clearToast } = useToastStore();
 
     const fetchSurveysPage = useCallback(
         async (page, size, title, sort) => {

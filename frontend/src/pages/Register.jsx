@@ -9,7 +9,7 @@ function Register() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
-    const { login, isAuthenticated } = useAuthStore();
+    const { login } = useAuthStore();
 
     console.log("Base URL:", import.meta.env.VITE_API_URL);
     console.log("Hello world");

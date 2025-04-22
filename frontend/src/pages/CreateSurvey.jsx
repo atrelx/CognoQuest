@@ -1,8 +1,7 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/ApiService.js";
 import { FaTrashAlt } from 'react-icons/fa';
-import { toast } from "react-toastify";
 import useToastStore from "../stores/useToastStore.js";
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
 
@@ -21,7 +20,19 @@ function CreateSurvey() {
     const [validationErrors, setValidationErrors] = useState({ title: null, questions: {}, noQuestionsError: false });
 
     const navigate = useNavigate();
-    const { showToast } = useToastStore();
+    const { showToast, toast: toastData, clearToast } = useToastStore();
+
+    useEffect(() => {
+        if (toastData && toastData.type === "error") {
+            import('react-toastify').then(({ toast }) => {
+                toast.error(toastData.message, {
+                    autoClose: 5000,
+                    closeButton: true,
+                });
+                clearToast();
+            });
+        }
+    }, [toastData, clearToast]);
 
     const handleTitleChange = (e) => {
         setTitle(e.target.value);
@@ -242,10 +253,16 @@ function CreateSurvey() {
 
         setIsSaving(true);
 
-        const questionsToSend = questions.map(({ tempId, id, ...rest }) => ({
-            ...rest,
-            options: (rest.options || []).map(({ tempId, id, ...optRest }) => optRest),
-            matchingPairs: (rest.matchingPairs || []).map(({ tempId, id, ...pairRest }) => pairRest)
+        const questionsToSend = questions.map(q => ({
+            ...q,
+            options: (q.options || []).map(opt => ({
+                optionText: opt.optionText,
+                isCorrect: opt.isCorrect
+            })),
+            matchingPairs: (q.matchingPairs || []).map(pair => ({
+                leftSide: pair.leftSide,
+                rightSide: pair.rightSide
+            }))
         }));
 
         try {
@@ -256,18 +273,11 @@ function CreateSurvey() {
                 endDate: endDate ? new Date(endDate).toISOString() : null,
                 questions: questionsToSend
             };
-
             await api.post("/surveys", surveyData);
             showToast("Survey created successfully!", "success");
             navigate("/");
         } catch (err) {
-            toast.update(toastId, {
-                render: err.response?.data?.message || "Failed to create survey.",
-                type: "error",
-                isLoading: false,
-                autoClose: 5000,
-                closeButton: true
-            });
+            showToast(err.response?.data?.message || "Failed to create survey.", "error");
             setSubmitError(err.response?.data?.message || "Failed to create survey.");
         } finally {
             setIsSaving(false);

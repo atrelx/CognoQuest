@@ -26,7 +26,7 @@ function Login() {
         try {
             const response = await api.post('/auth/login', { email, password });
             if (response.data) {
-                loginUserInStore(response.data);a
+                loginUserInStore(response.data);
                 navigate("/home");
             } else {
                 setError("Login failed: No user data returned.");

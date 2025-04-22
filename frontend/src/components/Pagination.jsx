@@ -2,9 +2,9 @@ import React from 'react';
 import { usePaginationRange } from '../hooks/usePaginationRange';
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-    if (totalPages <= 1) return null;
-
     const paginationRange = usePaginationRange({ currentPage, totalPages });
+
+    if (totalPages <= 1) return null;
 
     const handlePrev = () => {
         if (currentPage > 0) onPageChange(currentPage - 1);
