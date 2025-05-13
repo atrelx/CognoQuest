@@ -9,6 +9,8 @@ Check out the demo video showcasing the core features:
 - **Create a Quiz**: Add a new quiz with questions and options.
 - **Complete a Quiz**: Take a quiz and view results.
 
+https://github.com/user-attachments/assets/c18d527f-d45a-4b2c-a460-ccf397a66f86
+
 ## 🛠️ Tech Stack
 
 ### Backend
